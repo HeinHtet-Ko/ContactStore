@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import java.lang.Float.min
 
+@ExperimentalMaterialApi
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun HomeScreen() {
@@ -53,7 +55,7 @@ fun HomeScreen() {
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        val animateScrollState by animateDpAsState(targetValue = max(75.dp,150.dp*offs), animationSpec = tween(500))
+        val animateScrollState by animateDpAsState(targetValue = max(75.dp,150.dp*offs))
 
         Row(Modifier.fillMaxWidth()
             .background(Color(0xFF62ABEB))
@@ -76,7 +78,7 @@ fun HomeScreen() {
         LazyColumn(state = listState){
             items(clist){ contact:ContactItem ->
 
-                ContactListItem(contact,isSelecting,selectedList,offs)
+                ContactListItem(contact,isSelecting,selectedList)
 
 
             }
@@ -88,6 +90,7 @@ fun HomeScreen() {
 
 }
 
+@ExperimentalMaterialApi
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 @Preview(showBackground = true)
