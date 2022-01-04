@@ -1,5 +1,6 @@
 package com.mtu.ceit.hhk.contactstore
 
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -18,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -25,12 +27,28 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
+import com.alexstyl.contactstore.ContactStore
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlinx.coroutines.flow.first
 import java.lang.Float.min
+import java.util.jar.Manifest
 
+@ExperimentalPermissionsApi
 @ExperimentalMaterialApi
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun HomeScreen() {
+
+   val contactStore = ContactStore.newInstance(LocalContext.current)
+
+
+
+
+    val perState = rememberMultiplePermissionsState(permissions = listOf(
+        android.Manifest.permission.WRITE_CONTACTS,
+        android.Manifest.permission.READ_CONTACTS
+    ))
 
     var isSelecting by remember {
         mutableStateOf(false)
@@ -40,26 +58,42 @@ fun HomeScreen() {
     }
     Log.d("selectedList", "HomeScreen: ${selectedList.size}")
     val clist = remember {
-        val list:MutableList<ContactItem> = mutableListOf()
-        repeat(15){
-            list.add(ContactItem("Hein Htet Ko","09 770109404"))
-        }
-        list
+//        val list:MutableList<ContactItem> = mutableListOf()
+//        repeat(15){
+//            list.add(ContactItem("Hein Htet Ko","09 770109404"))
+//        }
+//        list
+        mutableListOf<ContactItem>()
+    }
+
+    LaunchedEffect(Unit) {
+
+        perState.launchMultiplePermissionRequest()
+       if( perState.allPermissionsGranted) {
+           val cs = mutableListOf<ContactItem>()
+           val c = contactStore.fetchContacts().first()
+           c.forEach {
+               cs.add(ContactItem(it.displayName!!,"39fj"))
+           }
+           selectedList = cs
+       }
     }
 
     val listState = rememberLazyListState()
 
 
 
-    val offs = min(1f,1-(listState.firstVisibleItemScrollOffset/600f + listState.firstVisibleItemIndex))
+   // val offs = min(1f,1-(listState.firstVisibleItemScrollOffset/500f + listState.firstVisibleItemIndex))
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        val animateScrollState by animateDpAsState(targetValue = max(75.dp,150.dp*offs))
+       // val animateScrollState by animateDpAsState(targetValue = max(75.dp,150.dp*offs))
 
-        Row(Modifier.fillMaxWidth()
-            .background(Color(0xFF62ABEB))
-            .height(animateScrollState), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF62ABEB))
+                .height(50.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(text = "Contacts", fontSize = 25.sp,
                 fontFamily = FontFamily(Font(R.font.sourceserif)),
                 modifier = Modifier
@@ -74,11 +108,11 @@ fun HomeScreen() {
 
 
 
-        Log.d("offsettracking", "HomeScreen: $offs")
+      //  Log.d("offsettracking", "HomeScreen: $offs")
         LazyColumn(state = listState){
-            items(clist){ contact:ContactItem ->
+            items(selectedList){ contact:ContactItem ->
 
-                ContactListItem(contact,isSelecting,selectedList)
+                ContactListItem(contact,isSelecting, mutableListOf())
 
 
             }
@@ -90,6 +124,7 @@ fun HomeScreen() {
 
 }
 
+@ExperimentalPermissionsApi
 @ExperimentalMaterialApi
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable

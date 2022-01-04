@@ -37,7 +37,6 @@ fun ContactListItem(item: ContactItem,isSelecting:Boolean,selectedList:MutableLi
          mutableStateOf(false)
      }
 
-
     val swSt = rememberSwipeableState(initialValue = 0)
     val siz = with(LocalDensity.current){
         100.dp.toPx()

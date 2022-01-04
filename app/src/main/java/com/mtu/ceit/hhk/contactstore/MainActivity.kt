@@ -34,19 +34,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
+import com.alexstyl.contactstore.ContactColumn
 import com.alexstyl.contactstore.ContactStore
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 import com.mtu.ceit.hhk.contactstore.ui.theme.ContactStoreTheme
 import com.mtu.ceit.hhk.contactstore.ui.theme.Primary
 import com.mtu.ceit.hhk.contactstore.ui.theme.Purple200
 
 class MainActivity : ComponentActivity() {
+    @ExperimentalPermissionsApi
     @ExperimentalMaterialApi
     @RequiresApi(Build.VERSION_CODES.N)
     @ExperimentalAnimationApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val contact_store = ContactStore.newInstance(this)
+
+        contact_store.fetchContacts(
+
+        )
 
 
         val list:MutableList<ContactItem> = mutableListOf()
