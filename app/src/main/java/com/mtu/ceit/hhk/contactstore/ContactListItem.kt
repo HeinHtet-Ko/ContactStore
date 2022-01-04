@@ -1,6 +1,7 @@
 package com.mtu.ceit.hhk.contactstore
 
 import android.util.Log
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,15 +22,18 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 
 
 @Composable
-fun ContactListItem(item: ContactItem,isSelecting:Boolean,selectedList:MutableList<ContactItem>) {
+fun ContactListItem(item: ContactItem,isSelecting:Boolean,selectedList:MutableList<ContactItem>,scrollOffset:Float) {
 
      var checked by remember {
          mutableStateOf(false)
      }
+
+
 
     Row (modifier = Modifier
         .fillMaxWidth()
@@ -55,13 +59,23 @@ fun ContactListItem(item: ContactItem,isSelecting:Boolean,selectedList:MutableLi
             fontSize = 13.sp)
         }
 
-        if(isSelecting)
-        Checkbox(checked = checked, onCheckedChange = {
-            checked = !checked
-            if (it) selectedList.add(item)
-        })
+
+            if(isSelecting)
+                Checkbox(checked =  if(selectedList.contains(item)) true else checked , onCheckedChange = {
+                    checked = !checked
+                    if (it) selectedList.add(item)
+                    Log.d("selectedlist", "ContactListItem: ${selectedList.size}")
+                })
+
+
 
     }
 
+}
+
+@Preview(showBackground = true)
+@Composable
+fun Prev() {
+    ContactListItem(item = ContactItem("George","097770109404"), isSelecting = false, selectedList = mutableListOf(),scrollOffset = 0.9f )
 }
 
