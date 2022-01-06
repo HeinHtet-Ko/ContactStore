@@ -1,18 +1,15 @@
 package com.mtu.ceit.hhk.contactstore
-
-import android.graphics.BitmapFactory
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -20,19 +17,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
+import com.alexstyl.contactstore.ContactColumn
+import com.alexstyl.contactstore.ContactPredicate
 import com.alexstyl.contactstore.ContactStore
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
-import java.lang.Float.min
-import java.util.jar.Manifest
+
 
 @ExperimentalPermissionsApi
 @ExperimentalMaterialApi
@@ -47,7 +46,8 @@ fun HomeScreen() {
 
     val perState = rememberMultiplePermissionsState(permissions = listOf(
         android.Manifest.permission.WRITE_CONTACTS,
-        android.Manifest.permission.READ_CONTACTS
+        android.Manifest.permission.READ_CONTACTS,
+        android.Manifest.permission.CALL_PHONE
     ))
 
     var isSelecting by remember {
@@ -57,23 +57,35 @@ fun HomeScreen() {
         mutableStateOf(mutableListOf<ContactItem>())
     }
     Log.d("selectedList", "HomeScreen: ${selectedList.size}")
-    val clist = remember {
-//        val list:MutableList<ContactItem> = mutableListOf()
-//        repeat(15){
-//            list.add(ContactItem("Hein Htet Ko","09 770109404"))
-//        }
-//        list
-        mutableListOf<ContactItem>()
-    }
+
+
+    val context = LocalContext.current
+    val i = Intent(Intent.ACTION_CALL)
+    i.data = Uri.parse("tel:09770109404")
 
     LaunchedEffect(Unit) {
+
+
+
 
         perState.launchMultiplePermissionRequest()
        if( perState.allPermissionsGranted) {
            val cs = mutableListOf<ContactItem>()
-           val c = contactStore.fetchContacts().first()
-           c.forEach {
-               cs.add(ContactItem(it.displayName!!,"39fj"))
+           val cst = contactStore.fetchContacts(
+               columnsToFetch = listOf(
+                   ContactColumn.Names,
+                   ContactColumn.Phones
+               )).first()
+
+           Log.d("contactire", "HomeScreen: ${cst.size}")
+           cst.forEach {
+              val phone =  it.phones.map { contact ->
+                  if(contact.value.raw.isNotBlank())
+                      contact.value.raw
+                  else
+                      ""
+              }
+               cs.add(ContactItem(it.displayName!!,phone.toString()))
            }
            selectedList = cs
        }
@@ -90,7 +102,12 @@ fun HomeScreen() {
        // val animateScrollState by animateDpAsState(targetValue = max(75.dp,150.dp*offs))
 
         Row(
+
             Modifier
+                .clickable {
+                    context.startActivity(i)
+                    //  LocalContext.current.startActivity(i)
+                }
                 .fillMaxWidth()
                 .background(Color(0xFF62ABEB))
                 .height(50.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -108,8 +125,11 @@ fun HomeScreen() {
 
 
 
-      //  Log.d("offsettracking", "HomeScreen: $offs")
+        Log.d("offsettracking", "HomeScreen: ${selectedList.size}")
         LazyColumn(state = listState){
+
+
+
             items(selectedList){ contact:ContactItem ->
 
                 ContactListItem(contact,isSelecting, mutableListOf())
