@@ -13,6 +13,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -43,17 +44,14 @@ import com.mtu.ceit.hhk.contactstore.ui.theme.Primary
 import com.mtu.ceit.hhk.contactstore.ui.theme.Purple200
 
 class MainActivity : ComponentActivity() {
+    @ExperimentalFoundationApi
     @ExperimentalPermissionsApi
     @ExperimentalMaterialApi
     @RequiresApi(Build.VERSION_CODES.N)
     @ExperimentalAnimationApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val contact_store = ContactStore.newInstance(this)
 
-        contact_store.fetchContacts(
-
-        )
 
 
         val list:MutableList<ContactItem> = mutableListOf()
@@ -65,7 +63,11 @@ class MainActivity : ComponentActivity() {
             ContactStoreTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                   MyContactApp(store = contact_store)
+
+                    Scaffold {
+                        MyContactApp()
+                    }
+
                 }
             }
         }

@@ -2,20 +2,19 @@ package com.mtu.ceit.hhk.contactstore
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.provider.ContactsContract
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -24,25 +23,33 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+
 import androidx.compose.ui.unit.sp
 import com.mtu.ceit.hhk.contactstore.ui.theme.*
+import kotlin.math.min
 
 @ExperimentalFoundationApi
 @Composable
 fun ContactDetail() {
-    Column(modifier = Modifier.fillMaxSize()) {
+
+    val scst = rememberScrollState()
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .verticalScroll(scst)) {
 
         Box(modifier = Modifier
+
             .fillMaxWidth()
-            .fillMaxHeight(0.375f)
-            .background(Color.Green)){
+            .height(400.dp)
+           ){
             Image(
                 painter = painterResource(id = R.drawable.ic_id),
                 contentScale = ContentScale.Crop
                 ,contentDescription = "logo",
                 modifier = Modifier
                     .background(Primary)
-                    .fillMaxSize())
+                    .fillMaxSize()
+                   )
 
             Box(modifier = Modifier
                 .fillMaxSize()
@@ -70,31 +77,63 @@ fun ContactDetail() {
             
         }
 
-       PhoneCard()
-        val list = listOf("Delete","Favourite","Edit","Upload")
-        LazyVerticalGrid(cells = GridCells.Fixed(2),
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.5f),
-            contentPadding = PaddingValues(15.dp),
+     Column {
+         PhoneCard()
+         val list = listOf("Delete","Favourite","Edit","Upload")
+         LazyVerticalGrid(cells = GridCells.Fixed(2),
+             modifier = Modifier
+                 .fillMaxWidth()
+                 .height(300.dp),
+             contentPadding = PaddingValues(15.dp),
 
-        ){
-            items(list.size){
-                CustCard()
-            }
-        }
+             ){
+             items(list.size){
+                 CustCard()
+             }
+         }
+
+
+
+         FloatingButton()
+
+     }
 
 
     }
 }
 
 @Composable
+fun FloatingButton() {
+    var isFavourite by remember {
+        mutableStateOf(false)
+    }
+
+    Card (elevation = 10.dp) {
+        FloatingActionButton(onClick = {
+            isFavourite = !isFavourite
+        },
+            modifier = Modifier.size(40.dp),
+            backgroundColor = MaterialTheme.colors.onBackground) {
+
+            Icon(painter = painterResource(id = R.drawable.ic_delete)
+                , contentDescription = null,
+                tint =  if (isFavourite) Color.Red else Primary)
+
+        }
+    }
+
+
+}
+
+@Composable
 fun PhoneCard() {
+
+
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.2f)
+            .height(100.dp)
             .padding(20.dp, 10.dp)
         ,
         elevation = 10.dp,
@@ -130,10 +169,17 @@ fun PhoneCard() {
 @Composable
 fun CustCard() {
 
-   Card(modifier = Modifier
-   .padding(10.dp)
-       .height(80.dp), elevation = 15.dp,
-       backgroundColor = MaterialTheme.colors.onSurface
+
+
+
+    Card(modifier = Modifier
+        .padding(10.dp)
+        .clickable {
+
+        }
+        .height(80.dp), elevation = 15.dp
+       ,
+       backgroundColor = MaterialTheme.colors.surface
 
        ) {
                Column(
@@ -141,9 +187,9 @@ fun CustCard() {
                ){
                    Icon(painter = painterResource(id = R.drawable.ic_delete)
                        , contentDescription = "delete icon",
-                   tint = Primary)
+                   tint = Primary )
 
-                   Text(text = "Delete")
+                   Text(text = "Delete", color = MaterialTheme.colors.onSurface)
 
                }
    }
