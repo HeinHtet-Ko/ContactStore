@@ -25,13 +25,14 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
+import com.mtu.ceit.hhk.contactstore.domain.Contact
 import com.mtu.ceit.hhk.contactstore.ui.theme.w
 import kotlin.math.roundToInt
 
 
 @ExperimentalMaterialApi
 @Composable
-fun ContactListItem(item: ContactItem,isSelecting:Boolean,selectedList:MutableList<ContactItem>) {
+fun ContactListItem(item: Contact,isSelecting:Boolean,selectedList:MutableList<Contact>) {
 
      var checked by remember {
          mutableStateOf(false)
@@ -97,10 +98,10 @@ fun ContactListItem(item: ContactItem,isSelecting:Boolean,selectedList:MutableLi
                 .fillMaxHeight()
                 .padding(PaddingValues(30.dp, 3.dp)),
                 horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = item.name, fontSize = 18.sp
+                Text(text = item.name ?: " ", fontSize = 18.sp
                     , fontFamily = FontFamily(Font(R.font.mukutamedium)))
-                Text(text = item.ph_no,
-                    fontSize = 13.sp)
+//                Text(text = item.ph_no,
+//                    fontSize = 13.sp)
             }
         }
 
@@ -125,6 +126,6 @@ fun ContactListItem(item: ContactItem,isSelecting:Boolean,selectedList:MutableLi
 @Preview(showBackground = true)
 @Composable
 fun Prev() {
-    ContactListItem(item = ContactItem("George","097770109404"), isSelecting = false, selectedList = mutableListOf() )
+   // ContactListItem(item = ContactItem("George","097770109404"), isSelecting = false, selectedList = mutableListOf() )
 }
 

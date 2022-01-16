@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.first
 
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.MainScreen.route){
+    NavHost(navController = navController, startDestination = Screen.Home.route){
 
         composable(Screen.MainScreen.route){
             MainScreen()

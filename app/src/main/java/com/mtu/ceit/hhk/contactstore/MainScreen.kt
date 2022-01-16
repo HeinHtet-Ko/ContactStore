@@ -22,6 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mtu.ceit.hhk.contactstore.ui.theme.CardNight
 
 
 @ExperimentalFoundationApi
@@ -66,10 +67,11 @@ fun CustomTopAppBar() {
         Text(text = "Contact Store", fontSize = 25.sp)},
     navigationIcon = {
          IconButton(onClick = { }) {
-             Icon(imageVector = Icons.Filled.Face, contentDescription = "haha" )
+             Icon(painter = painterResource(id = R.drawable.ic_id),
+                 contentDescription = "haha" , modifier = Modifier.size(70.dp))
          }
     },
-    backgroundColor = MaterialTheme.colors.background,
+    backgroundColor = CardNight,
     contentColor = Color.Green,
     elevation = 4.dp)
 

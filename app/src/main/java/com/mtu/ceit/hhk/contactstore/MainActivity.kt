@@ -42,7 +42,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.mtu.ceit.hhk.contactstore.ui.theme.ContactStoreTheme
 import com.mtu.ceit.hhk.contactstore.ui.theme.Primary
 import com.mtu.ceit.hhk.contactstore.ui.theme.Purple200
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @ExperimentalFoundationApi
     @ExperimentalPermissionsApi
@@ -54,10 +56,7 @@ class MainActivity : ComponentActivity() {
 
 
 
-        val list:MutableList<ContactItem> = mutableListOf()
-        repeat(15){
-            list.add(ContactItem("Hein Htet Ko","09 770109404"))
-        }
+
 
         setContent {
             ContactStoreTheme {
