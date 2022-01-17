@@ -12,14 +12,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,74 +59,67 @@ fun HomeScreen(contactVM:LocalContactListViewModel = hiltViewModel()) {
 
     val listC = contactVM._contactList.collectAsState(initial = emptyList())
 
-
-
-    val context = LocalContext.current
-    val i = Intent(Intent.ACTION_CALL)
-    i.data = Uri.parse("tel:09770109404")
+//    val i = Intent(Intent.ACTION_CALL)
+//    i.data = Uri.parse("tel:09770109404")
 
     LaunchedEffect(Unit) {
-
         perState.launchMultiplePermissionRequest()
-       if( perState.allPermissionsGranted) {
-
-           contactVM.getContacts()
-
-       }
+        if( perState.allPermissionsGranted) {
+            contactVM.getContacts()
+        }
     }
 
-    val listState = rememberLazyListState()
+   // val listState = rememberLazyListState()
 
 
 
-    val offs = min(1f,1-(listState.firstVisibleItemScrollOffset/500f + listState.firstVisibleItemIndex))
+   // val offs = min(1f,1-(listState.firstVisibleItemScrollOffset/500f + listState.firstVisibleItemIndex))
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        val animateScrollState by animateDpAsState(targetValue = max(75.dp,150.dp*offs))
-        val animateFloat by animateFloatAsState(targetValue = kotlin.math.max(1f,10*offs))
+//        val animateScrollState by animateDpAsState(targetValue = max(75.dp,150.dp*offs))
+//        val animateFloat by animateFloatAsState(targetValue = kotlin.math.max(1f,10*offs))
 
-        Row(
-
-            Modifier
-                .clickable {
-                    // context.startActivity(i)
-                    //  LocalContext.current.startActivity(i)
-                }
-                .fillMaxWidth()
-                ,verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "Contacts", fontSize = 25.sp,
-                color = Color.Yellow
-                ,
-                fontFamily = FontFamily(Font(R.font.sourceserif)),
-                modifier = Modifier
-
-                    .clickable {
-                        isSelecting = !isSelecting
-
-                    }
-            )
-        }
-
-
-
-
-        Log.d("offsettracking", "HomeScreen: ${offs}")
-        LazyColumn(state = listState){
+        ContactHeader(title = "Contact List")
+        LazyColumn(){
 
 
             items(items = listC.value , key = {
                 it.id
             }){ contact:Contact ->
-                ContactListItem(contact,isSelecting, mutableListOf())
+                ContactListItem(contact)
             }
         }
     }
 
+}
 
+@Composable
+fun ContactHeader(title:String) {
 
+    Row(
+
+        Modifier
+            .fillMaxWidth()
+            .height(100.dp)
+        ,verticalAlignment = Alignment.CenterVertically
+        , horizontalArrangement = Arrangement.SpaceAround) {
+       // Spacer(modifier = Modifier.width(30.dp))
+        Text(text = title, fontSize = 25.sp,
+            color = Color.Yellow
+            ,
+            fontFamily = FontFamily(Font(R.font.sourceserif)),
+            )
+        IconButton(onClick = {  }) {
+            Icon(painter = painterResource(id = R.drawable.ic_select)
+                , contentDescription = null
+                , tint = Color.Green
+                ,modifier = Modifier.size(33.dp))
+        }
+    }
 
 }
+
 
 @ExperimentalPermissionsApi
 @ExperimentalMaterialApi

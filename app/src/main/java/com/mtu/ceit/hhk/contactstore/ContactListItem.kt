@@ -32,13 +32,9 @@ import kotlin.math.roundToInt
 
 @ExperimentalMaterialApi
 @Composable
-fun ContactListItem(item: Contact,isSelecting:Boolean,selectedList:MutableList<Contact>) {
+fun ContactListItem(item: Contact) {
 
-     var checked by remember {
-         mutableStateOf(false)
-     }
-
-    val swSt = rememberSwipeableState(initialValue = 0)
+   val swSt = rememberSwipeableState(initialValue = 0)
     val siz = with(LocalDensity.current){
         100.dp.toPx()
     }
@@ -67,7 +63,6 @@ fun ContactListItem(item: Contact,isSelecting:Boolean,selectedList:MutableList<C
             Spacer(modifier = Modifier.width(30.dp))
             
             Image(
-
                 painter = painterResource(id = R.drawable.call)
                 , modifier = Modifier
 
@@ -75,7 +70,7 @@ fun ContactListItem(item: Contact,isSelecting:Boolean,selectedList:MutableList<C
                     .clickable {
 
                     }
-                , contentDescription = "onswipe")
+                , contentDescription = "call icon")
         }
 
     
@@ -84,6 +79,7 @@ fun ContactListItem(item: Contact,isSelecting:Boolean,selectedList:MutableList<C
             Modifier
                 .align(Alignment.CenterStart)
                 .fillMaxWidth()
+                .fillMaxHeight()
                 .offset { IntOffset(swSt.offset.value.roundToInt(), 0) }
                 .background(MaterialTheme.colors.background)
         , verticalAlignment = Alignment.CenterVertically) {
@@ -94,28 +90,11 @@ fun ContactListItem(item: Contact,isSelecting:Boolean,selectedList:MutableList<C
                     .size(50.dp)
                     .clip(CircleShape)
             )
-            Column(modifier = Modifier
-                .fillMaxHeight()
-                .padding(PaddingValues(30.dp, 3.dp)),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = item.name ?: " ", fontSize = 18.sp
-                    , fontFamily = FontFamily(Font(R.font.mukutamedium)))
-//                Text(text = item.ph_no,
-//                    fontSize = 13.sp)
-            }
+
+            Text(text = item.name ?: " ", fontSize = 18.sp
+                , fontFamily = FontFamily(Font(R.font.mukutamedium)))
+
         }
-
-
-
-
-
-            if(isSelecting)
-                Checkbox(checked =  if(selectedList.contains(item)) true else checked , onCheckedChange = {
-                    checked = !checked
-                    if (it) selectedList.add(item)
-                    Log.d("selectedlist", "ContactListItem: ${selectedList.size}")
-                })
-
 
 
     }
