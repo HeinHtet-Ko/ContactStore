@@ -39,7 +39,7 @@ fun SplashScreen(navController: NavController) {
     val animateLogo by animateFloatAsState(targetValue = targetLogo, tween(2000),
     finishedListener = {
         navController.popBackStack()
-        navController.navigate(Screen.Home.route)
+        navController.navigate(Screen.HomeScreen.route)
     })
 
     var targetSub by remember {

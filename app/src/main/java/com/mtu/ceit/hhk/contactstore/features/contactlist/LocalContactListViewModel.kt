@@ -1,4 +1,4 @@
-package com.mtu.ceit.hhk.contactstore
+package com.mtu.ceit.hhk.contactstore.features.contactlist
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -19,10 +19,11 @@ import javax.inject.Inject
 class LocalContactListViewModel @Inject constructor (val repos: ContactRepository):ViewModel() {
 
 
-     var _contactList:MutableStateFlow<List<Contact>> = MutableStateFlow(mutableListOf())
+    private var _contactList:MutableStateFlow<List<Contact>> = MutableStateFlow(mutableListOf())
     val contactList = _contactList
 
     fun getContacts(){
+
         viewModelScope.launch(IO) {
             repos.getAllContacts().collect {
 

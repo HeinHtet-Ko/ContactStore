@@ -27,7 +27,7 @@ import com.mtu.ceit.hhk.contactstore.ui.theme.CardNight
 
 @ExperimentalFoundationApi
 @Composable
-fun MainScreen() {
+fun Home() {
 
     val titleList = remember {
         listOf("View Online Store","View Local Store","Download ","Upload")
@@ -114,6 +114,6 @@ fun MainActionCard(title:String){
 @Composable
 fun PrevMain(){
 
-    MainScreen()
+    Home()
 
 }
