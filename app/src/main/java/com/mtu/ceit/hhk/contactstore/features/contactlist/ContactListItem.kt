@@ -23,7 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mtu.ceit.hhk.contactstore.R
 import com.mtu.ceit.hhk.contactstore.domain.Contact
-import com.mtu.ceit.hhk.contactstore.ui.theme.w
+import com.mtu.ceit.hhk.contactstore.ui.theme.Primary
+import com.mtu.ceit.hhk.contactstore.ui.theme.RedVariant
+
 import kotlin.math.roundToInt
 
 
@@ -33,7 +35,7 @@ fun ContactListItem(item: Contact,isSelecting:Boolean,contactList:MutableList<Co
 
    val swSt = rememberSwipeableState(initialValue = 0)
     val isSelected = contactList.contains(item)
-    Log.d("brokenwings", "ContactListItem: $isSelecting")
+    Log.d("brokenwings", "ContactListItem: ${contactList.size}")
     var color by remember {
             if(isSelected)
                 mutableStateOf(Color.Green)
@@ -43,6 +45,12 @@ fun ContactListItem(item: Contact,isSelecting:Boolean,contactList:MutableList<Co
     }
 
     color = if (!isSelecting) Color.Transparent else color
+
+    var selectSurface = if(isSelecting){
+        if(isSelected) Primary else MaterialTheme.colors.background
+    }else {
+        MaterialTheme.colors.background
+    }
 
     val siz = with(LocalDensity.current){
         100.dp.toPx()
@@ -68,7 +76,7 @@ fun ContactListItem(item: Contact,isSelecting:Boolean,contactList:MutableList<Co
         }
         .height(100.dp)
         .padding(20.dp, 5.dp)
-        .background(w)
+        .background(RedVariant)
         ,
         contentAlignment = Alignment.CenterStart
         ){
@@ -96,7 +104,7 @@ fun ContactListItem(item: Contact,isSelecting:Boolean,contactList:MutableList<Co
                 .fillMaxWidth()
                 .fillMaxHeight()
                 .offset { IntOffset(swSt.offset.value.roundToInt(), 0) }
-                .background(MaterialTheme.colors.background)
+                .background(selectSurface)
         , verticalAlignment = Alignment.CenterVertically) {
             Image(painter = painterResource(id = R.drawable.avatar) ,
                 contentDescription = "avatar logo",
@@ -108,7 +116,7 @@ fun ContactListItem(item: Contact,isSelecting:Boolean,contactList:MutableList<Co
 
             Text(text = item.name ?: " ", fontSize = 18.sp
                 , fontFamily = FontFamily(Font(R.font.mukutamedium)),
-            modifier = Modifier.background(Color.Red))
+            modifier = Modifier.width(195.dp))
 
             Icon(painter = painterResource(id = R.drawable.ic_check),
                 contentDescription = null,

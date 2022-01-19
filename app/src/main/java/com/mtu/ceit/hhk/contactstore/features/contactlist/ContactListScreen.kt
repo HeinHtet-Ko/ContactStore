@@ -3,6 +3,10 @@ import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +14,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -23,6 +28,8 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.mtu.ceit.hhk.contactstore.domain.Contact
 import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactListItem
 import com.mtu.ceit.hhk.contactstore.features.contactlist.LocalContactListViewModel
+import com.mtu.ceit.hhk.contactstore.ui.theme.GreenVariant
+import com.mtu.ceit.hhk.contactstore.ui.theme.RedVariant
 
 
 @SuppressLint("MutableCollectionMutableState")
@@ -37,7 +44,7 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel()) {
         android.Manifest.permission.READ_CONTACTS,
         android.Manifest.permission.CALL_PHONE
     ))
-
+    val listC = contactVM.contactList.collectAsState(initial = emptyList())
 
     var selectedList by remember {
         mutableStateOf(mutableListOf<Contact>())
@@ -57,7 +64,11 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel()) {
 
 
 
-    val listC = contactVM.contactList.collectAsState(initial = emptyList())
+   val addAll = {
+       val tempList = mutableListOf<Contact>()
+       tempList.addAll(listC.value)
+       selectedList = tempList
+   }
 
 
 
@@ -111,26 +122,91 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel()) {
 //        val animateFloat by animateFloatAsState(targetValue = kotlin.math.max(1f,10*offs))
 
        // Log.d("contactheader", "Contact: $isSelecting")
-        ContactHeader(title = "Contact List",isSelecting,openSelect,selectedList)
-        SelectContactHeader(closeSelect)
-        LazyColumn(){
+
+        AnimatedVisibility(visible = isSelecting) {
+            SelectContactHeader(selectedList,closeSelect,addAll,isSelecting)
+        }
+        AnimatedVisibility(visible = !isSelecting) {
+            ContactHeader(title = "Contact List",isSelecting,openSelect,selectedList)
+        }
+
+        Box() {
+            LazyColumn(modifier = if(isSelecting)Modifier.padding(0.dp,0.dp,0.dp,80.dp)else Modifier){
+                items(items = listC.value , key = {
+                    it.id
+                }){ contact:Contact ->
+                    ContactListItem(contact,isSelecting,selectedList,toggleList)
+                }
+            }
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+
+                    Column {
+                        AnimatedVisibility(visible = isSelecting) {
+                            BottomActionBar()
+                        }
+                    }
 
 
-            items(items = listC.value , key = {
-                it.id
-            }){ contact:Contact ->
-                ContactListItem(contact,isSelecting,selectedList,toggleList)
+
+
             }
         }
+
+
+
+
+
     }
 
 }
 
 @Composable
-fun SelectContactHeader(closeSelect:()->Unit) {
-    Row(Modifier.fillMaxWidth()
-                .height(100.dp)
-            ,verticalAlignment = Alignment.CenterVertically
+fun BottomActionBar() {
+
+    Row(modifier = Modifier
+        .fillMaxWidth()
+        .height(80.dp)
+        .background(MaterialTheme.colors.surface)
+        .padding(35.dp, 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center) {
+        Column (horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable {
+
+        }){
+            Icon(painter = painterResource(id = R.drawable.ic_delete), contentDescription = "delete contacts"
+            , tint = RedVariant)
+            Text(text = "Delete", fontSize = 12.sp)
+        }
+       
+        Spacer(modifier = Modifier.width(70.dp))
+
+            Column (horizontalAlignment = Alignment.CenterHorizontally) {
+
+                  //  IconButton(onClick = { /*TODO*/ }) {
+                        Icon(painter = painterResource(id = R.drawable.ic_upload), modifier = Modifier.clickable {  }, contentDescription = "upload contacts",
+                            tint = Color.Green)
+                   // }
+
+
+                Text(text = "Upload", fontSize = 12.sp)
+            }
+
+
+       
+    }
+
+}
+
+@Composable
+fun SelectContactHeader(selectedList:List<Contact>,closeSelect:()->Unit,addAll:()->Unit,isSelecting: Boolean) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .alpha(if (isSelecting) 1f else 0f)
+            .background(MaterialTheme.colors.surface)
+            .height(90.dp)
+            ,verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround
             ) {
             // Spacer(modifier = Modifier.width(30.dp))
 
@@ -139,20 +215,20 @@ fun SelectContactHeader(closeSelect:()->Unit) {
             }) {
                 Icon(painter = painterResource(id = R.drawable.ic_close)
                     , contentDescription = null
-                    , tint = Color.Green
+                    , tint = RedVariant
                     ,modifier = Modifier.size(33.dp))
             }
 
-        Text(text = "Item Selected", fontSize = 20.sp,
-            color = Color.Yellow,
+        Text(text = "${selectedList.size} Item Selected", fontSize = 20.sp,
+            color = MaterialTheme.colors.primaryVariant,
             fontFamily = FontFamily(Font(R.font.sourceserif)),
         )
         IconButton(onClick = {
-
+            addAll.invoke()
         }) {
             Icon(painter = painterResource(id = R.drawable.ic_selectall)
                 , contentDescription = null
-                , tint = Color.Green
+                , tint = GreenVariant
                 ,modifier = Modifier.size(33.dp))
         }
         }
@@ -174,12 +250,14 @@ fun ContactHeader(title:String,isSelecting:Boolean,toggleSe:()->Unit,list:List<C
 
         Modifier
             .fillMaxWidth()
+            .alpha(if (isSelecting) 0f else 1f)
+            .background(MaterialTheme.colors.surface)
             .height(100.dp)
         ,verticalAlignment = Alignment.CenterVertically
         , horizontalArrangement = Arrangement.SpaceAround) {
        // Spacer(modifier = Modifier.width(30.dp))
         Text(text = text, fontSize = 25.sp,
-            color = Color.Yellow
+            color = MaterialTheme.colors.primaryVariant
             ,
             fontFamily = FontFamily(Font(R.font.sourceserif)),
             )
@@ -188,7 +266,7 @@ fun ContactHeader(title:String,isSelecting:Boolean,toggleSe:()->Unit,list:List<C
         }) {
             Icon(painter = painterResource(id = R.drawable.ic_select)
                 , contentDescription = null
-                , tint = Color.Green
+                , tint = GreenVariant
                 ,modifier = Modifier.size(33.dp))
         }
     }
