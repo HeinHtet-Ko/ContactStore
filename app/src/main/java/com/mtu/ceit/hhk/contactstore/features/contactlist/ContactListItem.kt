@@ -1,6 +1,8 @@
 package com.mtu.ceit.hhk.contactstore.features.contactlist
 
 import android.util.Log
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,7 +24,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mtu.ceit.hhk.contactstore.R
-import com.mtu.ceit.hhk.contactstore.domain.Contact
+import com.mtu.ceit.hhk.contactstore.domain.models.Contact
 import com.mtu.ceit.hhk.contactstore.ui.theme.Primary
 import com.mtu.ceit.hhk.contactstore.ui.theme.RedVariant
 
@@ -31,26 +33,30 @@ import kotlin.math.roundToInt
 
 @ExperimentalMaterialApi
 @Composable
-fun ContactListItem(item: Contact,isSelecting:Boolean,contactList:MutableList<Contact>,toggle:(Contact)->Unit) {
+fun ContactListItem(item: Contact, isSelecting:Boolean, contactList:MutableList<Contact>, toggle:(Contact)->Unit, clickListen:()->Unit) {
 
    val swSt = rememberSwipeableState(initialValue = 0)
     val isSelected = contactList.contains(item)
     Log.d("brokenwings", "ContactListItem: ${contactList.size}")
-    var color by remember {
-            if(isSelected)
-                mutableStateOf(Color.Green)
-            else
-                mutableStateOf(Color.Transparent)
 
-    }
+    var checkedColor = if(isSelecting && isSelected) Color.Green else Color.Transparent
+    var surfaceColor = if(isSelecting && isSelected) Primary else MaterialTheme.colors.background
 
-    color = if (!isSelecting) Color.Transparent else color
+//    var color by remember {
+//            if(isSelected)
+//                mutableStateOf(Color.Green)
+//            else
+//                mutableStateOf(Color.Transparent)
+//
+//    }
 
-    var selectSurface = if(isSelecting){
-        if(isSelected) Primary else MaterialTheme.colors.background
-    }else {
-        MaterialTheme.colors.background
-    }
+ //   color = if (!isSelecting) Color.Transparent else color
+
+//    var selectSurface = if(isSelecting){
+//        if(isSelected) Primary else MaterialTheme.colors.background
+//    }else {
+//        MaterialTheme.colors.background
+//    }
 
     val siz = with(LocalDensity.current){
         100.dp.toPx()
@@ -68,10 +74,11 @@ fun ContactListItem(item: Contact,isSelecting:Boolean,contactList:MutableList<Co
         .clickable {
             if (isSelecting) {
                 toggle.invoke(item)
-                color = if (color == Color.Transparent) Color.Green else Color.Transparent
+                // color = if (color == Color.Transparent) Color.Green else Color.Transparent
 
             } else {
-                color = Color.Transparent
+                clickListen.invoke()
+                // color = Color.Transparent
             }
         }
         .height(100.dp)
@@ -104,7 +111,7 @@ fun ContactListItem(item: Contact,isSelecting:Boolean,contactList:MutableList<Co
                 .fillMaxWidth()
                 .fillMaxHeight()
                 .offset { IntOffset(swSt.offset.value.roundToInt(), 0) }
-                .background(selectSurface)
+                .background(surfaceColor)
         , verticalAlignment = Alignment.CenterVertically) {
             Image(painter = painterResource(id = R.drawable.avatar) ,
                 contentDescription = "avatar logo",
@@ -120,7 +127,7 @@ fun ContactListItem(item: Contact,isSelecting:Boolean,contactList:MutableList<Co
 
             Icon(painter = painterResource(id = R.drawable.ic_check),
                 contentDescription = null,
-             tint = color)
+             tint = checkedColor)
 
         }
 

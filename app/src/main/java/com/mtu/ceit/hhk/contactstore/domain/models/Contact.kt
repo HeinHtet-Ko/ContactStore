@@ -1,4 +1,4 @@
-package com.mtu.ceit.hhk.contactstore.domain
+package com.mtu.ceit.hhk.contactstore.domain.models
 
 data class Contact(
     val id:Long,

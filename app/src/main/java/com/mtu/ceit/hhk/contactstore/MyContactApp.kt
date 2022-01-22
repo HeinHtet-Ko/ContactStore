@@ -1,18 +1,19 @@
 package com.mtu.ceit.hhk.contactstore
 
 import android.os.Build
-import android.window.SplashScreen
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.alexstyl.contactstore.ContactStore
+import androidx.navigation.navArgument
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import kotlinx.coroutines.flow.first
+import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
 
 
 @ExperimentalFoundationApi
@@ -37,12 +38,16 @@ import kotlinx.coroutines.flow.first
         }
         composable(Screen.ContactListScreen.route){
 
-           ContactList()
+           ContactList(navController = navController)
 
         }
 
-        composable(Screen.ContactDetailScreen.route){
-            ContactDetail()
+        composable(Screen.ContactDetailScreen.route
+            , arguments = listOf(navArgument("contact_id"){type = NavType.LongType})){ backstack ->
+
+            val id = backstack.arguments?.getLong("contact_id")
+            Log.d("contactidnavigate", "MyContactApp: $id")
+            ContactDetail(navController=navController,id!!)
         }
 
     }

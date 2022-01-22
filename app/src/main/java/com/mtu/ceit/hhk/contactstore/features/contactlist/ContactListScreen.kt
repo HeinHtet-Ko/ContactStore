@@ -1,15 +1,16 @@
-package com.mtu.ceit.hhk.contactstore
+package com.mtu.ceit.hhk.contactstore.features.contactlist
 import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,14 +21,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.mtu.ceit.hhk.contactstore.domain.Contact
-import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactListItem
-import com.mtu.ceit.hhk.contactstore.features.contactlist.LocalContactListViewModel
+import com.mtu.ceit.hhk.contactstore.FloatingButton
+import com.mtu.ceit.hhk.contactstore.R
+import com.mtu.ceit.hhk.contactstore.Screen
+import com.mtu.ceit.hhk.contactstore.domain.models.Contact
 import com.mtu.ceit.hhk.contactstore.ui.theme.GreenVariant
 import com.mtu.ceit.hhk.contactstore.ui.theme.RedVariant
 
@@ -37,7 +41,10 @@ import com.mtu.ceit.hhk.contactstore.ui.theme.RedVariant
 @ExperimentalMaterialApi
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
-fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel()) {
+fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navController: NavController) {
+
+
+
 
     val perState = rememberMultiplePermissionsState(permissions = listOf(
         android.Manifest.permission.WRITE_CONTACTS,
@@ -62,6 +69,15 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel()) {
         selectedList.clear()
     }
 
+     val clickItem:(Contact)->Unit = remember {
+         {
+             contact: Contact ->
+             contactVM.getContactDetail(contact.id)
+             Log.d("contactidnavigate", "ContactList: ${contact.id} is")
+             navController.navigate(Screen.ContactDetailScreen.createRoute(contact.id))
+         }
+    }
+
 
 
    val addAll = {
@@ -75,7 +91,7 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel()) {
    // val count = listC.value.find { it.name == "HHK" }
     Log.d("contactheader", "ContactList: ${selectedList} ")
 
-    val toggleList = { contact:Contact ->
+    val toggleList = { contact: Contact ->
 
         val tempList = mutableListOf<Contact>()
         tempList.addAll(selectedList)
@@ -110,10 +126,24 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel()) {
         }
     }
 
-   // val listState = rememberLazyListState()
+    val listState = rememberLazyListState()
+
+    var isScrolling = !listState.isScrollInProgress
+
+    var isShowing by remember {
+        mutableStateOf(true)
+    }
 
 
+    val tempIndex = listState.firstVisibleItemIndex - listState.firstVisibleItemIndex
+    var pair = mutableListOf(0,listState.firstVisibleItemIndex)
+    isShowing = pair[0] >= pair[1]
+    pair[0] = pair[1]
+  //  pair[1] = listState.firstVisibleItemIndex
+//    if(tempIndex>listState.firstVisibleItemIndex)
+//    val isHideFloating = if()
 
+    Log.d("liststatetracker", "ContactList: ${pair}")
    // val offs = min(1f,1-(listState.firstVisibleItemScrollOffset/500f + listState.firstVisibleItemIndex))
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -131,13 +161,18 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel()) {
         }
 
         Box() {
-            LazyColumn(modifier = if(isSelecting)Modifier.padding(0.dp,0.dp,0.dp,80.dp)else Modifier){
+            LazyColumn(modifier = if(isSelecting)Modifier.padding(0.dp,0.dp,0.dp,80.dp)else Modifier
+            , state = listState){
                 items(items = listC.value , key = {
                     it.id
-                }){ contact:Contact ->
-                    ContactListItem(contact,isSelecting,selectedList,toggleList)
+                }){ contact: Contact ->
+                    ContactListItem(contact,isSelecting,selectedList,toggleList){
+                        clickItem.invoke(contact)
+                    }
                 }
             }
+
+         
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
 
                     Column {
@@ -150,6 +185,34 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel()) {
 
 
             }
+            Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier
+                .fillMaxSize()
+                .padding(25.dp)) {
+
+                Column {
+                    AnimatedVisibility(visible = isShowing && !isSelecting,
+                        enter = fadeIn() + slideIn(
+                            initialOffset = { IntOffset(it.height,1200) },
+                            animationSpec = (tween(500))
+                        ),
+                        exit = fadeOut() + slideOut(
+                            targetOffset = { IntOffset(it.height,1200) },
+                            animationSpec = (tween(500))
+                        )
+                    ) {
+                        FloatingActionButton(onClick = {  }, backgroundColor = GreenVariant) {
+
+                            Icon(painter = painterResource(id = R.drawable.ic_addcontact), contentDescription = null)
+
+                        }
+                    }
+                }
+
+
+
+
+            }
+
         }
 
 
@@ -198,7 +261,7 @@ fun BottomActionBar() {
 }
 
 @Composable
-fun SelectContactHeader(selectedList:List<Contact>,closeSelect:()->Unit,addAll:()->Unit,isSelecting: Boolean) {
+fun SelectContactHeader(selectedList:List<Contact>, closeSelect:()->Unit, addAll:()->Unit, isSelecting: Boolean) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -280,5 +343,5 @@ fun ContactHeader(title:String,isSelecting:Boolean,toggleSe:()->Unit,list:List<C
 @Composable
 @Preview(showBackground = true)
 fun prev() {
-    ContactList()
+    //ContactList()
 }

@@ -1,5 +1,7 @@
 package com.mtu.ceit.hhk.contactstore.domain
 
+import com.mtu.ceit.hhk.contactstore.domain.models.Contact
+import com.mtu.ceit.hhk.contactstore.domain.models.ContactDetail
 import kotlinx.coroutines.flow.Flow
 
 interface ContactRepository {
@@ -8,6 +10,7 @@ interface ContactRepository {
 
     suspend fun getAllContactsDetails()
 
-    fun insertContact()
+    suspend fun insertContact()
 
+    suspend fun getContactDetail(contact_id:Long):ContactDetail
 }
