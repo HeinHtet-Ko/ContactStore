@@ -147,7 +147,7 @@ fun ExposedDropDown() {
 
             DropdownMenu(expanded = expanded, onDismissRequest = {
                 expanded = false
-            },modifier = Modifier.fillMaxWidth(0.7f).background(WhiteGray)) {
+            },modifier = Modifier.fillMaxWidth(0.7f)) {
                 DropdownMenuItem(onClick = {
                     expanded = false
                 },) {
