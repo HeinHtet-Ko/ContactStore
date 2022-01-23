@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.mtu.ceit.hhk.contactstore.features.ContactAdd
 import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
 
 
@@ -26,7 +27,7 @@ import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
 
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.ContactListScreen.route){
+    NavHost(navController = navController, startDestination = Screen.ContactAddScreen.route){
 
         composable(Screen.HomeScreen.route){
             Home()
@@ -48,6 +49,12 @@ import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
             val id = backstack.arguments?.getLong("contact_id")
             Log.d("contactidnavigate", "MyContactApp: $id")
             ContactDetail(navController=navController,id!!)
+        }
+
+        composable(route = Screen.ContactAddScreen.route){
+
+            ContactAdd()
+
         }
 
     }

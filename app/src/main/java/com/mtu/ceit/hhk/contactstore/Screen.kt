@@ -9,6 +9,7 @@ sealed class Screen (val route:String){
     {
 fun createRoute(contactID:Long) = "$contactID/contact_detail"
     }
+    object ContactAddScreen:Screen("contact_add")
 
 
 }
