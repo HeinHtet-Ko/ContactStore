@@ -29,7 +29,7 @@ class LocalContactListViewModel @Inject constructor (val repos: ContactRepositor
 
     init {
         viewModelScope.launch {
-          //  repos.insertContact()
+          // repos.insertContact()
         }
 
     }

@@ -13,7 +13,8 @@ private val DarkColorPalette = darkColors(
     primaryVariant = Purple700,
     secondary = Teal200,
     onSurface = WhiteGray,
-    surface = CardNight
+    surface = CardNight,
+    onSecondary = DarkVariant
 
 )
 
@@ -23,6 +24,7 @@ private val LightColorPalette = lightColors(
     primaryVariant = Purple700,
     secondary = Teal200,
     onSurface = Color.Black,
+    onSecondary = WhiteVariant
 
 
     /* Other default colors to override

@@ -3,7 +3,7 @@ package com.mtu.ceit.hhk.contactstore
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
@@ -27,7 +27,7 @@ import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
 
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.ContactAddScreen.route){
+    NavHost(navController = navController, startDestination = Screen.ContactListScreen.route){
 
         composable(Screen.HomeScreen.route){
             Home()
@@ -48,7 +48,10 @@ import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
 
             val id = backstack.arguments?.getLong("contact_id")
             Log.d("contactidnavigate", "MyContactApp: $id")
-            ContactDetail(navController=navController,id!!)
+
+                ContactDetail(navController=navController,id!!)
+
+
         }
 
         composable(route = Screen.ContactAddScreen.route){

@@ -37,8 +37,8 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
     }
 
     override suspend fun insertContact() {
-        val lb = LabeledPhone("308472",Label.PhoneNumberAssistant)
-        val lb2 = LabeledPhone("3939",Label.LocationWork)
+        val lb = LabeledPhone("lak",Label.PhoneNumberAssistant)
+        val lb2 = LabeledPhone("09s",Label.LocationWork)
         contactStore.execute {
             insert {
 
@@ -51,6 +51,7 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
                     lb2.label
                 )
                 mail("err",Label.LocationWork)
+              //  imageData = ImageData(byteArrayOf("sjsjd".toByte()))
 
             }
         }
@@ -79,6 +80,8 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
 //
 //        }
 
+       // contact.imageData.raw
+
         val phones:List<LabeledPhone> = contact.phones.map {
             LabeledPhone(it.value.raw,it.label)
         }
@@ -87,7 +90,7 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
             LabeledMail(it.value.raw,it.label)
         }
 
-        return ContactDetail(contact.contactId,contact.displayName,contact.isStarred,phones,mails)
+        return ContactDetail(contact.contactId,contact.displayName,contact.imageData?.raw,contact.isStarred,phones,mails)
 
     }
 

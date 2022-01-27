@@ -1,9 +1,17 @@
 package com.mtu.ceit.hhk.contactstore
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.provider.ContactsContract
 import android.util.Log
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -22,7 +30,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
@@ -32,11 +42,14 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 
 import androidx.compose.ui.unit.sp
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexstyl.contactstore.Label
 import com.mtu.ceit.hhk.contactstore.domain.models.ContactDetail
 import com.mtu.ceit.hhk.contactstore.features.contactlist.LocalContactListViewModel
+import com.mtu.ceit.hhk.contactstore.features.convertUriToBitmap
 import com.mtu.ceit.hhk.contactstore.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlin.math.min
@@ -74,15 +87,11 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:LocalCon
             .height(400.dp)
            ){
 
-            Image(
-                painter = painterResource(id = R.drawable.ic_id),
-                contentScale = ContentScale.Crop
-                ,contentDescription = "logo",
-                modifier = Modifier
-                    .background(Primary)
-                    .fillMaxSize()
-                   )
             TopActionBar(onArrowPressed)
+            
+            
+            ContactImage(imgByteArray = contactVM.contactDetail.value!!.imgData)
+            
             Box(modifier = Modifier
                 .fillMaxSize()
                 .background(
@@ -150,6 +159,63 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:LocalCon
 
         
     }
+}
+
+
+@Composable
+fun ContactImage(imgByteArray: ByteArray?) {
+
+    val context = LocalContext.current
+
+    var imageUri:Uri? by remember {
+        mutableStateOf(null)
+    }
+
+    var imageBitmap:Bitmap by remember {
+        val bm = if(imgByteArray == null){
+            ResourcesCompat.getDrawable(context.resources,R.drawable.ic_id,context.theme)!!.toBitmap()
+
+        } else
+        {
+
+            BitmapFactory.decodeByteArray(imgByteArray,0,imgByteArray.size)
+        }
+
+        mutableStateOf(bm)
+    }
+    
+    val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()){ uri:Uri? ->
+
+        imageUri = uri
+
+    }
+    
+    SideEffect {
+        imageUri?.let {
+            imageBitmap = convertUriToBitmap(it,context)
+        }
+
+    }
+
+    
+
+    Image(
+
+      //  bitmap = imageBitmap.asImageBitmap(),
+
+       painter = painterResource(id = R.drawable.ic_id),
+        contentScale = ContentScale.Crop
+        ,contentDescription = "logo",
+        modifier = Modifier
+            .background(Primary)
+            .fillMaxSize()
+            .clickable {
+                launcher.launch("image/*")
+            }
+    )
+
+
+
 }
 
 @Composable

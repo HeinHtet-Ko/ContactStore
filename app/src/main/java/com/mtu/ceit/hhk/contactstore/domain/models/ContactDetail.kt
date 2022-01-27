@@ -5,9 +5,10 @@ import com.alexstyl.contactstore.Label
 data class ContactDetail(
     val id:Long,
     val name:String?,
+    val imgData:ByteArray?,
     val isStarred:Boolean,
     val phones:List<LabeledPhone>,
-    val mails:List<LabeledMail>? = null
+    val mails:List<LabeledMail>? = null,
 
 )
 
