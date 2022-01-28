@@ -18,6 +18,7 @@ import javax.inject.Inject
 class ContactReposImpl @Inject constructor(val contactStore: ContactStore):ContactRepository {
     override suspend fun getAllContacts(): Flow<List<Contact>> {
 
+        Log.d("Allcontacttrack", "getAllContacts: init $this")
         return contactStore.fetchContacts(
             columnsToFetch = listOf(ContactColumn.Mails,ContactColumn.Image),
 //            predicate = ContactPredicate.ContactLookup(

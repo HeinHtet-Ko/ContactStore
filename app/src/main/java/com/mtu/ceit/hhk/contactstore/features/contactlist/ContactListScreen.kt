@@ -51,7 +51,12 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
         android.Manifest.permission.READ_CONTACTS,
         android.Manifest.permission.CALL_PHONE
     ))
-    val listC = contactVM.contactList.collectAsState(initial = emptyList())
+
+    val list = remember {
+        contactVM._contactList.value
+    }
+
+   // val listC = contactVM.contactList.collectAsState(initial = emptyList())
 
     var selectedList by remember {
         mutableStateOf(mutableListOf<Contact>())
@@ -82,7 +87,7 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
 
    val addAll = {
        val tempList = mutableListOf<Contact>()
-       tempList.addAll(listC.value)
+       tempList.addAll(list)
        selectedList = tempList
    }
 
@@ -122,6 +127,7 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
     LaunchedEffect(Unit) {
         perState.launchMultiplePermissionRequest()
         if( perState.allPermissionsGranted) {
+            Log.d("Allcontactlist", "ContactList: get invoked")
             contactVM.getContacts()
         }
     }
@@ -163,7 +169,7 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
         Box() {
             LazyColumn(modifier = if(isSelecting)Modifier.padding(0.dp,0.dp,0.dp,80.dp)else Modifier
             , state = listState){
-                items(items = listC.value , key = {
+                items(items = list , key = {
                     it.id
                 }){ contact: Contact ->
                     ContactListItem(contact,isSelecting,selectedList,toggleList){

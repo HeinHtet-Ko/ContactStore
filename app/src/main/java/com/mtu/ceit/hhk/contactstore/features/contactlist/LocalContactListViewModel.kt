@@ -1,5 +1,6 @@
 package com.mtu.ceit.hhk.contactstore.features.contactlist
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -13,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,14 +26,22 @@ class LocalContactListViewModel @Inject constructor (val repos: ContactRepositor
     private val _contactDetail:MutableState<ContactDetail?> = mutableStateOf(null)
     val contactDetail get() = _contactDetail
 
-    private var _contactList:MutableStateFlow<List<Contact>> = MutableStateFlow(mutableListOf())
-    val contactList = _contactList
+    var _contactList:MutableState<List<Contact>> = mutableStateOf(mutableListOf())
+  //  val contactList = _contactList
 
     init {
+        Log.d("Allcontacttrack", "getAllContacts: vm $this")
+        Log.d("Allcontacttrack", "getAllContacts: vm $repos")
         viewModelScope.launch {
+
           // repos.insertContact()
         }
 
+    }
+
+    override fun onCleared() {
+        Log.d("Allcontacttrack", "on cleared $this")
+        super.onCleared()
     }
 
     fun getContactDetail(id:Long) {
@@ -43,13 +53,18 @@ class LocalContactListViewModel @Inject constructor (val repos: ContactRepositor
 
     fun getContacts(){
 
-        viewModelScope.launch(IO) {
-            repos.getAllContacts().collect {
+        viewModelScope.launch() {
 
-                _contactList.value = it
+            _contactList.value = repos.getAllContacts().first()
+//
+//            repos.getAllContacts().collect {
+//
+//                _contactList.value = it
+//
+//
+//            }
 
 
-            }
         }
     }
 
