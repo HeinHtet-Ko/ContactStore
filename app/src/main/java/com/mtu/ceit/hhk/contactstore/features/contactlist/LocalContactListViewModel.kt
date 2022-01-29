@@ -27,13 +27,13 @@ class LocalContactListViewModel @Inject constructor (val repos: ContactRepositor
     val contactDetail get() = _contactDetail
 
     var _contactList:MutableState<List<Contact>> = mutableStateOf(mutableListOf())
-  //  val contactList = _contactList
+    val contactList = _contactList as State<List<Contact>>
 
     init {
         Log.d("Allcontacttrack", "getAllContacts: vm $this")
         Log.d("Allcontacttrack", "getAllContacts: vm $repos")
         viewModelScope.launch {
-
+            getContacts()
           // repos.insertContact()
         }
 

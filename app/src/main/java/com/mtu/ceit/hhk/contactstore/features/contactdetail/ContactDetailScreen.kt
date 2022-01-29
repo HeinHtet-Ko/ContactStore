@@ -16,6 +16,8 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
@@ -28,10 +30,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -42,25 +47,29 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintSet
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexstyl.contactstore.Label
 import com.mtu.ceit.hhk.contactstore.domain.models.ContactDetail
+import com.mtu.ceit.hhk.contactstore.features.contactdetail.ContactDetailViewModel
 import com.mtu.ceit.hhk.contactstore.features.contactlist.LocalContactListViewModel
 import com.mtu.ceit.hhk.contactstore.features.convertUriToBitmap
 import com.mtu.ceit.hhk.contactstore.ui.theme.*
 import kotlinx.coroutines.delay
+import kotlin.math.max
 import kotlin.math.min
 
 @ExperimentalFoundationApi
 @Composable
-fun ContactDetail(navController: NavController,contactID:Long,contactVM:LocalContactListViewModel = hiltViewModel()) {
+fun ContactDetail(navController: NavController,contactID:Long,contactVM:ContactDetailViewModel = hiltViewModel()) {
 
 
 
-    contactVM.getContactDetail(contactID)
+    contactVM.fetchContactDetail(contactID)
 
     val contactDetail = contactVM.contactDetail.value!!
     val isStarred = remember {
@@ -74,54 +83,81 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:LocalCon
             Unit
         }
     }
-
     val scst = rememberScrollState()
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .verticalScroll(scst)) {
+    val constrains = ConstraintSet {
+        val imageBox = createRefFor("imgBox")
+        val column = createRefFor("columnField")
+        val gl = createGuidelineFromTop(maxOf(0f,(1-(scst.value)/1200f))-0.5f)
 
-
-        Box(modifier = Modifier
-
-            .fillMaxWidth()
-            .height(400.dp)
-           ){
-
-            TopActionBar(onArrowPressed)
-            
-            
-            ContactImage(imgByteArray = contactVM.contactDetail.value!!.imgData)
-            
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            DarkGray
-                        ), startY = 650f
-                    )
-                ),
-            contentAlignment = Alignment.BottomStart) {
-                Text(text = "${contactDetail.name}", fontSize = 20.sp , color = WhiteGray ,
-                    modifier = Modifier.padding(30.dp,15.dp,15.dp,15.dp),
-                    fontFamily = FontFamily.Serif
-                )
-            }
+        constrain(imageBox) {
+            top.linkTo(parent.top)
+            start.linkTo(parent.start)
+            bottom.linkTo(gl)
+        }
+        constrain(column) {
+            top.linkTo(gl)
+            start.linkTo(parent.start)
         }
 
-     Column {
-
-         contactDetail.phones.map {
-             PhoneCard(R.drawable.ic_call,it.value,it.label)
-         }
-         contactDetail.mails?.map {
-             PhoneCard(R.drawable.ic_mail,it.value,it.label)
-         }
-
-
-     }
     }
+
+
+    Log.d("scsttrack", "ContactDetail: ${maxOf(0f,(1-(scst.value)/1200f))}")
+
+    val alp = maxOf(0f,(1-(scst.value)/500f))
+
+
+    Box {
+
+
+
+        ContactImage(imgByteArray = contactVM.contactDetail.value!!.imgData,alpha = alp )
+
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scst)
+            , contentAlignment = Alignment.Center ) {
+            Column(modifier = Modifier
+                .fillMaxHeight(0.5f)
+                .fillMaxWidth()
+                .padding(7.dp, 330.dp, 7.dp, 20.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(DarkVariantOne)
+                .padding(0.dp, 20.dp, 10.dp, 120.dp)
+
+            ) {
+
+                Text(
+                    modifier = Modifier
+                        .alpha(alp)
+                        .fillMaxWidth()
+                        .padding(30.dp, 5.dp, 5.dp, 20.dp),
+                    text = contactDetail.name ?: " ",
+                    color = WhiteVariant,
+                    textAlign = TextAlign.Start,
+                    fontSize = 20.sp,
+                    fontFamily = FontFamily.Serif
+                )
+
+                contactDetail.phones.map {
+                    PhoneCard(R.drawable.ic_call,it.value,it.label)
+                }
+                contactDetail.mails?.map {
+                    PhoneCard(R.drawable.ic_mail,it.value,it.label)
+                }
+                Spacer(modifier = Modifier.height(500.dp))
+            }
+
+        }
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter ){
+
+            TopActionBar(onArrowPressed,contactDetail.name ?: "" , alp)
+
+        }
+
+
+    }
+
     Box(modifier = Modifier
         .fillMaxSize()
         .padding(30.dp),
@@ -129,14 +165,6 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:LocalCon
 
         var animaSt by remember {
             mutableStateOf(true)
-        }
-
-        LaunchedEffect(key1 = Unit){
-//            while (true)
-//            {
-//                delay(3000)
-//                animaSt = !animaSt
-//            }
         }
 
         AnimatedVisibility(visible =animaSt,
@@ -152,7 +180,7 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:LocalCon
             Row {
                 FloatingButton(R.drawable.ic_upload, GreenVariant)
                 Spacer(modifier = Modifier.width(10.dp))
-                FloatingButton(R.drawable.ic_delete, RedVariant)
+               // FloatingButton(R.drawable.ic_delete, RedVariant)
             }
         }
         
@@ -163,7 +191,7 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:LocalCon
 
 
 @Composable
-fun ContactImage(imgByteArray: ByteArray?) {
+fun ContactImage(imgByteArray: ByteArray?,alpha:Float) {
 
     val context = LocalContext.current
 
@@ -199,33 +227,67 @@ fun ContactImage(imgByteArray: ByteArray?) {
 
     
 
-    Image(
+    if(imgByteArray != null){
+        Image(
 
-      //  bitmap = imageBitmap.asImageBitmap(),
+            bitmap = imageBitmap.asImageBitmap(),
+            contentScale = ContentScale.Crop
+            ,contentDescription = "logo",
+            modifier = Modifier
+                .alpha(alpha)
+                .background(Primary)
+                .fillMaxWidth()
+                .height(400.dp)
+                .clickable {
+                    launcher.launch("image/*")
+                }
+        )
+    }else{
+        Image(
 
-       painter = painterResource(id = R.drawable.ic_id),
-        contentScale = ContentScale.Crop
-        ,contentDescription = "logo",
-        modifier = Modifier
-            .background(Primary)
-            .fillMaxSize()
-            .clickable {
-                launcher.launch("image/*")
-            }
-    )
+            //  bitmap = imageBitmap.asImageBitmap(),
+
+            painter = painterResource(id = R.drawable.ic_id),
+            contentScale = ContentScale.Crop
+            ,contentDescription = "logo",
+            modifier = Modifier
+                .alpha(alpha)
+                .background(Primary)
+                .fillMaxWidth()
+                .height(400.dp)
+                .clickable {
+                    launcher.launch("image/*")
+                }
+        )
+    }
+
 
 
 
 }
 
 @Composable
-fun TopActionBar(onArrowPressed:()->Unit) {
+fun TopActionBar(onArrowPressed:()->Unit,name:String,alpha: Float) {
     Box(modifier = Modifier
         .fillMaxWidth()
         .height(70.dp)
-        .padding(0.dp, 10.dp, 15.dp, 10.dp),
+        .padding(0.dp, 10.dp, 15.dp, 10.dp)
+        .background(Color.Green),
         contentAlignment = Alignment.TopEnd){
-        Box(modifier = Modifier.fillMaxWidth(),
+
+        Box(modifier = Modifier.fillMaxWidth()
+            .alpha(1f-alpha),
+            contentAlignment = Alignment.Center) {
+            Text(
+                text = name,
+                fontSize = 20.sp ,
+                modifier = Modifier.padding(10.dp),
+                fontFamily = FontFamily.Serif)
+        }
+
+        Box(modifier = Modifier
+            .alpha(alpha)
+            .fillMaxWidth(),
             contentAlignment = Alignment.TopStart) {
             IconButton(onClick = {
                 onArrowPressed.invoke()
@@ -235,7 +297,7 @@ fun TopActionBar(onArrowPressed:()->Unit) {
                     modifier = Modifier.size(30.dp), imageVector = Icons.Filled.ArrowBack )
             }
         }
-        Row(modifier = Modifier
+        Row(modifier = Modifier.alpha(alpha)
 
         ) {
 
@@ -318,8 +380,8 @@ fun PhoneCard( drawableID:Int, rawValue:String, label:Label) {
             )
             Spacer(modifier = Modifier.width(20.dp))
             Column (horizontalAlignment = Alignment.Start){
-                Text(text = rawValue)
-                Text(text = labelStr)
+                Text(text = rawValue, style = MaterialTheme.typography.h6)
+                Text(text = labelStr, style = MaterialTheme.typography.subtitle2)
             }
 
 

@@ -52,9 +52,7 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
         android.Manifest.permission.CALL_PHONE
     ))
 
-    val list = remember {
-        contactVM._contactList.value
-    }
+    val list = contactVM.contactList.value
 
    // val listC = contactVM.contactList.collectAsState(initial = emptyList())
 
@@ -128,7 +126,7 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
         perState.launchMultiplePermissionRequest()
         if( perState.allPermissionsGranted) {
             Log.d("Allcontactlist", "ContactList: get invoked")
-            contactVM.getContacts()
+            //contactVM.getContacts()
         }
     }
 
