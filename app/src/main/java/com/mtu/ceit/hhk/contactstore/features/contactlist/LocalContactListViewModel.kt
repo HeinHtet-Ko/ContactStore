@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,7 +28,10 @@ class LocalContactListViewModel @Inject constructor (val repos: ContactRepositor
     val contactDetail get() = _contactDetail
 
     var _contactList:MutableState<List<Contact>> = mutableStateOf(mutableListOf())
-    val contactList = _contactList as State<List<Contact>>
+    var searchResults:MutableState<List<Contact>> = mutableStateOf(mutableListOf())
+    val contactList = _contactList
+
+    var query = mutableStateOf("")
 
     init {
         Log.d("Allcontacttrack", "getAllContacts: vm $this")
@@ -37,6 +41,11 @@ class LocalContactListViewModel @Inject constructor (val repos: ContactRepositor
           // repos.insertContact()
         }
 
+    }
+
+    fun onQuChange(query:String){
+        searchResults.value = _contactList.value.filter { it.name!!.contains(query) }
+        Log.d("trackerlist", "onQuChange: ${_contactList.value}")
     }
 
     override fun onCleared() {
@@ -55,7 +64,9 @@ class LocalContactListViewModel @Inject constructor (val repos: ContactRepositor
 
         viewModelScope.launch() {
 
-            _contactList.value = repos.getAllContacts().first()
+              repos.getAllContacts().collect {
+                  _contactList.value = it + it
+            }
 //
 //            repos.getAllContacts().collect {
 //

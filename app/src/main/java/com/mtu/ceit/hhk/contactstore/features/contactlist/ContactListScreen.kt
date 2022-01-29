@@ -52,7 +52,9 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
         android.Manifest.permission.CALL_PHONE
     ))
 
-    val list = contactVM.contactList.value
+    val list = remember {
+        contactVM.contactList.value
+    }
 
    // val listC = contactVM.contactList.collectAsState(initial = emptyList())
 
@@ -63,13 +65,20 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
         mutableStateOf(false)
     }
 
-    val openSelect = {
-        isSelecting = true
+    val openSelect = remember {
+        {
+            isSelecting = true
+        }
+
     }
 
-    val closeSelect:()->Unit = {
-        isSelecting = false
-        selectedList.clear()
+    val closeSelect = remember {
+
+       {
+            isSelecting = false
+            selectedList.clear()
+        }
+
     }
 
      val clickItem:(Contact)->Unit = remember {
@@ -83,10 +92,12 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
 
 
 
-   val addAll = {
-       val tempList = mutableListOf<Contact>()
-       tempList.addAll(list)
-       selectedList = tempList
+   val addAll = remember {
+       {
+           val tempList = mutableListOf<Contact>()
+           tempList.addAll(list)
+           selectedList = tempList
+       }
    }
 
 
@@ -132,25 +143,23 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
 
     val listState = rememberLazyListState()
 
-    var isScrolling = !listState.isScrollInProgress
 
     var isShowing by remember {
         mutableStateOf(true)
     }
 
 
-    val tempIndex = listState.firstVisibleItemIndex - listState.firstVisibleItemIndex
-    var pair = mutableListOf(0,listState.firstVisibleItemIndex)
-    isShowing = pair[0] >= pair[1]
-    pair[0] = pair[1]
-  //  pair[1] = listState.firstVisibleItemIndex
-//    if(tempIndex>listState.firstVisibleItemIndex)
-//    val isHideFloating = if()
 
-    Log.d("liststatetracker", "ContactList: ${pair}")
-   // val offs = min(1f,1-(listState.firstVisibleItemScrollOffset/500f + listState.firstVisibleItemIndex))
+    var query by remember {
+        mutableStateOf("")
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
+
+        TextField(value = query, onValueChange = {
+            query = it
+            contactVM.onQuChange(it)
+        } )
 
 //        val animateScrollState by animateDpAsState(targetValue = max(75.dp,150.dp*offs))
 //        val animateFloat by animateFloatAsState(targetValue = kotlin.math.max(1f,10*offs))
@@ -164,16 +173,28 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
             ContactHeader(title = "Contact List",isSelecting,openSelect,selectedList)
         }
 
-        Box() {
-            LazyColumn(modifier = if(isSelecting)Modifier.padding(0.dp,0.dp,0.dp,80.dp)else Modifier
-            , state = listState){
-                items(items = list , key = {
-                    it.id
-                }){ contact: Contact ->
-                    ContactListItem(contact,isSelecting,selectedList,toggleList){
-                        clickItem.invoke(contact)
+        Box {
+            LazyColumn(modifier = if(isSelecting)Modifier.padding(0.dp,0.dp,0.dp,80.dp)else Modifier){
+
+                if(query.isBlank())
+                {
+                    items(items =  list,
+                        key = {
+                            it.id
+                        }){ contact: Contact ->
+                        ContactListItem(contact,isSelecting,selectedList,toggleList){
+                            clickItem.invoke(contact)
+                        }
+                    }
+                }else{
+                    items(items = contactVM.searchResults.value,
+                        ){ contact: Contact ->
+                        ContactListItem(contact,isSelecting,selectedList,toggleList){
+                            clickItem.invoke(contact)
+                        }
                     }
                 }
+
             }
 
          
