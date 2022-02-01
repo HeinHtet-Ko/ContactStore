@@ -113,13 +113,14 @@ fun ContactListItem(item: Contact, isSelecting:Boolean, contactList:MutableList<
                 .offset { IntOffset(swSt.offset.value.roundToInt(), 0) }
                 .background(surfaceColor)
         , verticalAlignment = Alignment.CenterVertically) {
-            Image(painter = painterResource(id = R.drawable.avatar) ,
-                contentDescription = "avatar logo",
-                modifier = Modifier
-                    .padding(20.dp, 0.dp)
-                    .size(50.dp)
-                    .clip(CircleShape)
-            )
+
+//            Image(painter = painterResource(id = R.drawable.avatar) ,
+//                contentDescription = "avatar logo",
+//                modifier = Modifier
+//                    .padding(20.dp, 0.dp)
+//                    .size(50.dp)
+//                    .clip(CircleShape)
+//            )
 
             Text(text = item.name ?: " ", fontSize = 18.sp
                 , fontFamily = FontFamily(Font(R.font.mukutamedium)),

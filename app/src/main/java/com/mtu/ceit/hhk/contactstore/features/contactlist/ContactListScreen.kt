@@ -46,17 +46,15 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
 
 
 
-    val perState = rememberMultiplePermissionsState(permissions = listOf(
-        android.Manifest.permission.WRITE_CONTACTS,
-        android.Manifest.permission.READ_CONTACTS,
-        android.Manifest.permission.CALL_PHONE
-    ))
+//    val perState = rememberMultiplePermissionsState(permissions = listOf(
+//        android.Manifest.permission.WRITE_CONTACTS,
+//        android.Manifest.permission.READ_CONTACTS,
+//        android.Manifest.permission.CALL_PHONE
+//    ))
 
     val list = remember {
         contactVM.contactList.value
     }
-
-   // val listC = contactVM.contactList.collectAsState(initial = emptyList())
 
     var selectedList by remember {
         mutableStateOf(mutableListOf<Contact>())
@@ -85,7 +83,6 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
          {
              contact: Contact ->
              contactVM.getContactDetail(contact.id)
-             Log.d("contactidnavigate", "ContactList: ${contact.id} is")
              navController.navigate(Screen.ContactDetailScreen.createRoute(contact.id))
          }
     }
@@ -100,19 +97,11 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
        }
    }
 
-
-
-   // val count = listC.value.find { it.name == "HHK" }
-    Log.d("contactheader", "ContactList: ${selectedList} ")
-
-    val toggleList = { contact: Contact ->
+   val toggleList = { contact: Contact ->
 
         val tempList = mutableListOf<Contact>()
         tempList.addAll(selectedList)
-       // val index = listC.value.indexOf(contact)
-       // val updated = contact.copy(name = "HHK")
-       // listC.value.toMutableList().add(index,updated)
-        Log.d("contactheader", "ContactList: invoked")
+
         if(!tempList.contains(contact)){
             tempList.add(contact)
         }
@@ -122,24 +111,12 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
     }
 
         selectedList = tempList
-      //  selectedList = listC.value
 
-       // listC.value = listC.value.toMutableList()[index] = updated
 
     }
 
 //    val i = Intent(Intent.ACTION_CALL)
 //    i.data = Uri.parse("tel:09770109404")
-
-
-
-    LaunchedEffect(Unit) {
-        perState.launchMultiplePermissionRequest()
-        if( perState.allPermissionsGranted) {
-            Log.d("Allcontactlist", "ContactList: get invoked")
-            //contactVM.getContacts()
-        }
-    }
 
     val listState = rememberLazyListState()
 
@@ -156,15 +133,11 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        TextField(value = query, onValueChange = {
-            query = it
-            contactVM.onQuChange(it)
-        } )
+//        TextField(value = query, onValueChange = {
+//            query = it
+//            contactVM.onQuChange(it)
+//        } )
 
-//        val animateScrollState by animateDpAsState(targetValue = max(75.dp,150.dp*offs))
-//        val animateFloat by animateFloatAsState(targetValue = kotlin.math.max(1f,10*offs))
-
-       // Log.d("contactheader", "Contact: $isSelecting")
 
         AnimatedVisibility(visible = isSelecting) {
             SelectContactHeader(selectedList,closeSelect,addAll,isSelecting)
@@ -174,7 +147,9 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
         }
 
         Box {
+
             LazyColumn(modifier = if(isSelecting)Modifier.padding(0.dp,0.dp,0.dp,80.dp)else Modifier){
+
 
                 if(query.isBlank())
                 {
@@ -225,7 +200,9 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
                             animationSpec = (tween(500))
                         )
                     ) {
-                        FloatingActionButton(onClick = {  }, backgroundColor = GreenVariant) {
+                        FloatingActionButton(onClick = {
+                                                       navController.navigate(Screen.ContactAddScreen.route)
+                        }, backgroundColor = GreenVariant) {
 
                             Icon(painter = painterResource(id = R.drawable.ic_addcontact), contentDescription = null)
 
@@ -270,13 +247,12 @@ fun BottomActionBar() {
 
             Column (horizontalAlignment = Alignment.CenterHorizontally) {
 
-                  //  IconButton(onClick = { /*TODO*/ }) {
-                        Icon(painter = painterResource(id = R.drawable.ic_upload), modifier = Modifier.clickable {  }, contentDescription = "upload contacts",
+
+                        Icon(painter = painterResource(id = R.drawable.ic_upload),
+                            modifier = Modifier.clickable {  },
+                            contentDescription = "upload contacts",
                             tint = Color.Green)
-                   // }
-
-
-                Text(text = "Upload", fontSize = 12.sp)
+                        Text(text = "Upload", fontSize = 12.sp)
             }
 
 
@@ -296,7 +272,6 @@ fun SelectContactHeader(selectedList:List<Contact>, closeSelect:()->Unit, addAll
             ,verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround
             ) {
-            // Spacer(modifier = Modifier.width(30.dp))
 
             IconButton(onClick = {
                     closeSelect.invoke()
@@ -343,7 +318,7 @@ fun ContactHeader(title:String,isSelecting:Boolean,toggleSe:()->Unit,list:List<C
             .height(100.dp)
         ,verticalAlignment = Alignment.CenterVertically
         , horizontalArrangement = Arrangement.SpaceAround) {
-       // Spacer(modifier = Modifier.width(30.dp))
+
         Text(text = text, fontSize = 25.sp,
             color = MaterialTheme.colors.primaryVariant
             ,
@@ -368,5 +343,5 @@ fun ContactHeader(title:String,isSelecting:Boolean,toggleSe:()->Unit,list:List<C
 @Composable
 @Preview(showBackground = true)
 fun prev() {
-    //ContactList()
+
 }

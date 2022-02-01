@@ -26,6 +26,7 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
 //            )
         ).map {
             it.map {
+
               //  Log.d("contactidnavigate", "altgetAllContacts: ${it.mails[0]}")
                 Contact(it.contactId,it.displayName,it.isStarred)
             }
@@ -34,7 +35,7 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
     }
 
     override suspend fun getAllContactsDetails() {
-        TODO("Not yet implemented")
+
     }
 
     override suspend fun insertContact() {
@@ -42,6 +43,7 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
         val lb2 = LabeledPhone("09s",Label.LocationWork)
         contactStore.execute {
             insert {
+
 
                 phone(
                     lb.value,
@@ -51,7 +53,9 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
                     lb2.value,
                     lb2.label
                 )
+               // webAddress("ahsd",Label.Other)
                 mail("err",Label.LocationWork)
+
               //  imageData = ImageData(byteArrayOf("sjsjd".toByte()))
 
             }
@@ -91,7 +95,13 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
             LabeledMail(it.value.raw,it.label)
         }
 
-        return ContactDetail(contact.contactId,contact.displayName,contact.imageData?.raw,contact.isStarred,phones,mails)
+        return ContactDetail(
+            id = contact.contactId,
+            displayName = contact.displayName,
+            imgData = contact.imageData?.raw,
+            isStarred = contact.isStarred,
+            phones = phones,
+            mails = mails)
 
     }
 

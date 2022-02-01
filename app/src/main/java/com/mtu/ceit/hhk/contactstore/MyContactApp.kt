@@ -43,10 +43,17 @@ import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
         }
         composable(Screen.ContactListScreen.route,
         exitTransition = {
-            slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
+            if(targetState.destination.route == Screen.ContactDetailScreen.route)
+                slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(500))
+            else
+                slideOutOfContainer(AnimatedContentScope.SlideDirection.Up, animationSpec = tween(500))
         },
         popEnterTransition = {
-            slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
+            if(initialState.destination.route == Screen.ContactDetailScreen.route)
+                slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(500))
+            else
+                slideIntoContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(500))
+
         }){
 
            ContactList(navController = navController)
@@ -56,15 +63,15 @@ import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
         composable(Screen.ContactDetailScreen.route
             , arguments = listOf(navArgument("contact_id"){type = NavType.LongType}),
         enterTransition = {
-            slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
+            slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(500))
         },
         exitTransition = {
             Log.d("animtrack", "MyContactApp: JUSTEXIT")
-            slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(700))
+            slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(500))
         },
         popExitTransition = {
             Log.d("animtrack", "MyContactApp: POPEXIT")
-            slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
+            slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(500))
         }){ backstack ->
 
             val id = backstack.arguments?.getLong("contact_id")
@@ -73,7 +80,17 @@ import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
 
         }
 
-        composable(route = Screen.ContactAddScreen.route){
+        composable(route = Screen.ContactAddScreen.route,enterTransition = {
+            slideIntoContainer(AnimatedContentScope.SlideDirection.Up, animationSpec = tween(500))
+        },
+            exitTransition = {
+                Log.d("animtrack", "MyContactApp: JUSTEXIT")
+                slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(500))
+            },
+            popExitTransition = {
+                Log.d("animtrack", "MyContactApp: POPEXIT")
+                slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(500))
+            }){
 
             ContactAdd()
 

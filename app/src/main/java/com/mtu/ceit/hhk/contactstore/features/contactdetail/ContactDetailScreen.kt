@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
@@ -69,9 +70,14 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:ContactD
 
 
 
-    contactVM.fetchContactDetail(contactID)
+//    LaunchedEffect(key1 = Unit){
+//        contactVM.fetchContactDetail(contactID)
+//    }
 
-    val contactDetail = contactVM.contactDetail.value!!
+    val contactDetail = remember {
+        contactVM.fetchContactDetail(contactID)
+        contactVM.contactDetail.value!!
+    }
     val isStarred = remember {
         mutableStateOf(contactDetail.isStarred)
     }
@@ -84,33 +90,13 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:ContactD
         }
     }
     val scst = rememberScrollState()
-    val constrains = ConstraintSet {
-        val imageBox = createRefFor("imgBox")
-        val column = createRefFor("columnField")
-        val gl = createGuidelineFromTop(maxOf(0f,(1-(scst.value)/1200f))-0.5f)
-
-        constrain(imageBox) {
-            top.linkTo(parent.top)
-            start.linkTo(parent.start)
-            bottom.linkTo(gl)
-        }
-        constrain(column) {
-            top.linkTo(gl)
-            start.linkTo(parent.start)
-        }
-
-    }
 
 
-    Log.d("scsttrack", "ContactDetail: ${maxOf(0f,(1-(scst.value)/1200f))}")
 
     val alp = maxOf(0f,(1-(scst.value)/500f))
 
 
     Box {
-
-
-
         ContactImage(imgByteArray = contactVM.contactDetail.value!!.imgData,alpha = alp )
 
         Box(modifier = Modifier
@@ -129,10 +115,12 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:ContactD
 
                 Text(
                     modifier = Modifier
-                        .alpha(alp)
+                        .graphicsLayer {
+                            alpha = alp
+                        }
                         .fillMaxWidth()
                         .padding(30.dp, 5.dp, 5.dp, 20.dp),
-                    text = contactDetail.name ?: " ",
+                    text = contactDetail.displayName ?: " ",
                     color = WhiteVariant,
                     textAlign = TextAlign.Start,
                     fontSize = 20.sp,
@@ -151,7 +139,7 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:ContactD
         }
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter ){
 
-            TopActionBar(onArrowPressed,contactDetail.name ?: "" , alp)
+            TopActionBar(onArrowPressed,contactDetail.displayName ?: "" , alp)
 
         }
 
@@ -234,7 +222,9 @@ fun ContactImage(imgByteArray: ByteArray?,alpha:Float) {
             contentScale = ContentScale.Crop
             ,contentDescription = "logo",
             modifier = Modifier
-                .alpha(alpha)
+                .graphicsLayer {
+                    this.alpha = alpha
+                }
                 .background(Primary)
                 .fillMaxWidth()
                 .height(400.dp)
@@ -251,7 +241,9 @@ fun ContactImage(imgByteArray: ByteArray?,alpha:Float) {
             contentScale = ContentScale.Crop
             ,contentDescription = "logo",
             modifier = Modifier
-                .alpha(alpha)
+                .graphicsLayer {
+                    this.alpha = alpha
+                }
                 .background(Primary)
                 .fillMaxWidth()
                 .height(400.dp)
@@ -270,13 +262,16 @@ fun ContactImage(imgByteArray: ByteArray?,alpha:Float) {
 fun TopActionBar(onArrowPressed:()->Unit,name:String,alpha: Float) {
     Box(modifier = Modifier
         .fillMaxWidth()
-        .height(70.dp)
-        .padding(0.dp, 10.dp, 15.dp, 10.dp)
-        .background(Color.Green),
+        .height(80.dp)
+        .padding(0.dp, 0.dp, 15.dp, 10.dp),
         contentAlignment = Alignment.TopEnd){
 
-        Box(modifier = Modifier.fillMaxWidth()
-            .alpha(1f-alpha),
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                this.alpha = 1f - alpha
+            }
+            .background(DarkVariantOne),
             contentAlignment = Alignment.Center) {
             Text(
                 text = name,
@@ -287,7 +282,7 @@ fun TopActionBar(onArrowPressed:()->Unit,name:String,alpha: Float) {
 
         Box(modifier = Modifier
             .alpha(alpha)
-            .fillMaxWidth(),
+            .fillMaxSize(),
             contentAlignment = Alignment.TopStart) {
             IconButton(onClick = {
                 onArrowPressed.invoke()
@@ -297,10 +292,8 @@ fun TopActionBar(onArrowPressed:()->Unit,name:String,alpha: Float) {
                     modifier = Modifier.size(30.dp), imageVector = Icons.Filled.ArrowBack )
             }
         }
-        Row(modifier = Modifier.alpha(alpha)
-
-        ) {
-
+        Row(modifier = Modifier.alpha(alpha))
+        {
             IconButton(onClick = {
                 //  isStarred.value = !isStarred.value
             }, modifier = Modifier) {

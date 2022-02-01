@@ -15,6 +15,9 @@ class ContactDetailViewModel @Inject constructor(
     val getContactDetail: GetContactDetail
 ):ViewModel(){
 
+    init {
+
+    }
 
     private val _contactDetail:MutableState<ContactDetail?> = mutableStateOf(null)
 

@@ -5,7 +5,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -15,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -30,14 +36,29 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.alexstyl.contactstore.Label
 import com.mtu.ceit.hhk.contactstore.R
+import com.mtu.ceit.hhk.contactstore.domain.models.ContactDetail
+import com.mtu.ceit.hhk.contactstore.domain.models.LabeledPhone
 import com.mtu.ceit.hhk.contactstore.ui.theme.*
 import kotlin.math.exp
 
 @ExperimentalMaterialApi
 @Composable
-fun ContactAdd() {
+fun ContactAdd(contactAddVM:AddContactViewModel = hiltViewModel()) {
 
+    val contactDetail by remember {
+        mutableStateOf(ContactDetail(
+            displayName = "",
+            firstName = "",
+            lastName = "",
+            phones = mutableListOf(),
+            isStarred = false,
+            imgData = null,
+
+        ))
+    }
     var firstName by remember {
         mutableStateOf("")
     }
@@ -46,9 +67,9 @@ fun ContactAdd() {
         mutableStateOf("")
     }
 
-    var phoneNo by remember {
-        mutableStateOf("")
-    }
+//    var phoneNo by remember {
+//        mutableStateOf("")
+//    }
 
     var mail by remember {
         mutableStateOf("")
@@ -71,165 +92,148 @@ fun ContactAdd() {
     }
     val scrollState = rememberScrollState()
 
-    var targetFloat = ((9+(-scrollState.value * 0.01f))/9 )*0.4
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+//            Image(
+//                painter = painterResource(id = R.drawable.ic_id),
+//                modifier = Modifier
+//                    .fillMaxHeight(0.5f)
+//                    .fillMaxWidth()
+//                    .clickable {
+//
+//                    },
+//                contentDescription = null,
+//                contentScale = ContentScale.Crop)
+
+//            Column(modifier = Modifier) {
+//
+//                NameField(
+//                    firstName = contactAddVM.firstName.value,
+//                    lastName = contactAddVM.lastName.value,
+//                    firstNameValueChange ={
+//                        contactAddVM.onFirstNameChange(it)
+//                    },
+//                    lastNameValueChange = {
+//                        contactAddVM.onLastNameChange(it)
+//                    })
+//
+//                repeat(contactAddVM.phoneCount.value){
+//                    CombinedField(
+//                        labelText = "Phone Number",
+//                        icon = Icons.Default.Phone,
+//                        keyboardType = KeyboardType.Phone,
+//                        options = phoneOptions,
+//                        index = it,
+//                        list = contactAddVM.phoneList,
+//                        vm = contactAddVM
+//                    )
+//                }
 
 
 
-
-    val frf by animateFloatAsState(targetValue = targetFloat.toFloat())
-
-   // targetFloat = (-scrollState.value * 0.1f)
-
-
-    val constraints = ConstraintSet {
-        val imageContainer = createRefFor("img")
-        val column = createRefFor("column")
-        val imgGuide = createGuidelineFromTop(frf)
-
-
-
-        constrain(imageContainer) {
-            start.linkTo(parent.start)
-            top.linkTo(parent.top)
-            end.linkTo(parent.end)
-
-            bottom.linkTo(column.top)
-
-        }
-        constrain(column) {
-            start.linkTo(parent.start)
-            top.linkTo(imageContainer.bottom)
-           // end.linkTo()
-
-        }
-
-    }
-
-
-    Log.d("scrtracklist", "ContactAdd: ${(-scrollState.value/4)}")
-
-    ConstraintLayout(constraintSet = constraints,
-            modifier = Modifier.fillMaxSize()) {
-
-
-
-            Image(
-                painter = painterResource(id = R.drawable.lback),
+                   item {
+                                   Image(
+                painter = painterResource(id = R.drawable.ic_id),
                 modifier = Modifier
-                  //  .absoluteOffset(y = (-(scrollState.value)).dp)
-                    .layoutId("img")
-                    // .fillMaxHeight(0.5f)
+                    .fillMaxHeight(0.5f)
                     .fillMaxWidth()
-                    .scale(((9+(-scrollState.value * 0.01f))/9 ))
-                    .alpha(((9 + (-scrollState.value * 0.01f)) / 9))
-
-
-                    .background(CardNightVariant)
                     .clickable {
 
                     },
                 contentDescription = null,
                 contentScale = ContentScale.Crop)
+                   }
+
+                    items(contactAddVM.testCount.value){ index: Int ->
+
+                        Log.d("testStringList", "ContactAdd: $index")
+                      CompoundField {
+                          Log.d("testStringList", "Contact $index")
+                          contactAddVM.onTestAdd(index,it)
+                      }
+
+                    }
 
 
 
+
+
+//                PhoneField(
+//                    phoneNo = contactAddVM.phone.value,
+//                    labelText = "Phone Number",
+//                    icon = Icons.Default.Phone,
+//                    keyboardType = KeyboardType.Phone,
+//                    onPhoneValueChange = {
+//                        phoneNo = it
+//                    },
+//                    options = phoneOptions
+//                )
+
+//                CombinedField(
+//                    phoneNo = mail,
+//                    labelText = "E-Mail",
+//                    icon = Icons.Default.Email,
+//                    keyboardType = KeyboardType.Email,
+//                    onPhoneValueChange = {
+//                        mail = it
+//                    },
+//                    options = mailOptions
+//                )
 //
-//           Box(modifier = Modifier
-//               .fillMaxSize()
-//               .layoutId("column"),
-//           contentAlignment = Alignment.BottomStart){
+//                MoreFieds(
+//                    noteStr = note,
+//                    webAddress = webAddress,
+//                    onNoteValueChange = {
+//                        note = it
+//                    },
+//                    onWebValueChange = {
+//
+//                    })
+//
+//            }
+    }
 
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopStart ){
 
-               Column(modifier = Modifier
-                   .layoutId("column")
-                   .fillMaxHeight()
-                   // .fillMaxSize()
-                   // .scrollable(rememberScrollState(),Orientation.Vertical)
-                   .verticalScroll(scrollState)
-                        ) {
-//                   Spacer(modifier = Modifier.height(100.dp).fillMaxWidth(0.5f)
-//                       .background(Color.Red))
-                   NameField(
-                       firstName = firstName,
-                       lastName = lastName,
-                       firstNameValueChange = {
-                           firstName = it
-                       },
-                       lastNameValueChange = {
-                           lastName = it
-                       } )
+        Row(modifier = Modifier
+            .height(100.dp)
+            .fillMaxWidth() ,
+            verticalAlignment = Alignment.CenterVertically ,
+        horizontalArrangement = Arrangement.SpaceBetween) {
+            IconButton(onClick = {  }, modifier = Modifier.padding(15.dp,0.dp,0.dp,0.dp)) {
+                Icon(imageVector = Icons.Default.Close, contentDescription = null ,
+                    Modifier
+                        .size(35.dp)
+                        .clip(CircleShape)
+                        .clickable { })
+            }
 
-                   PhoneField(
-                       phoneNo = phoneNo,
-                       labelText = "Phone Number",
-                       icon = Icons.Default.Phone,
-                       keyboardType = KeyboardType.Phone,
-                       onPhoneValueChange = {
-                           phoneNo = it
-                       },
-                       options = phoneOptions
-                   )
-
-                   PhoneField(
-                       phoneNo = mail,
-                       labelText = "E-Mail",
-                       icon = Icons.Default.Email,
-                       keyboardType = KeyboardType.Email,
-                       onPhoneValueChange = {
-                           mail = it
-                       },
-                       options = mailOptions
-                   )
-
-                   MoreFieds(
-                       note = note,
-                       webAddress = webAddress,
-                       onNoteValueChange = {
-
-                       },
-                       onWebValueChange = {
-
-                       })
-                   MoreFieds(
-                       note = note,
-                       webAddress = webAddress,
-                       onNoteValueChange = {
-
-                       },
-                       onWebValueChange = {
-
-                       })
-                   MoreFieds(
-                       note = note,
-                       webAddress = webAddress,
-                       onNoteValueChange = {
-
-                       },
-                       onWebValueChange = {
-
-                       })
-                   Spacer(modifier = Modifier.height(200.dp))
-               }
-
+            IconButton(onClick = {  }, modifier = Modifier.padding(0.dp,0.dp,15.dp,0.dp)) {
+                Icon(imageVector = Icons.Default.Check, contentDescription = null ,
+                    Modifier
+                        .size(35.dp)
+                        .clip(CircleShape)
+                        .clickable { })
+            }
         }
 
+    }
 
 
 
+    }
 
-}
 
 @Composable
-fun MoreFieds(note:String,webAddress:String,onNoteValueChange:(String)->Unit,onWebValueChange:(String)->Unit) {
+fun MoreFieds(noteStr:String,webAddress:String,onNoteValueChange:(String)->Unit,onWebValueChange:(String)->Unit) {
 
-    CustomOutLineTextField(
-        value = note,
-        labelText = " Note ",
-        icon = Icons.Default.Info,
-        keyboardType = KeyboardType.Text,
-        onValueChange = {
-
-        })
+//    CustomOutLineTextField(
+//        value = note,
+//        labelText = " Note ",
+//        icon = Icons.Default.Info,
+//        keyboardType = KeyboardType.Text,
+//        onValueChange = {
+//
+//        })
 
     CustomOutLineTextField(
         value = webAddress,
@@ -239,6 +243,20 @@ fun MoreFieds(note:String,webAddress:String,onNoteValueChange:(String)->Unit,onW
         onValueChange = {
 
         })
+
+    TextField(
+        modifier = Modifier
+            .height(200.dp)
+            .padding(30.dp),
+        value = noteStr,
+        leadingIcon ={Icon(imageVector =Icons.Default.Info, contentDescription = null, tint = Primary)},
+        singleLine = false,
+        maxLines = 5,
+        label = { Text(text = "Note")},
+        onValueChange = {
+           onNoteValueChange.invoke(it)
+    })
+
 
 }
 
@@ -261,29 +279,64 @@ fun NameField(firstName:String, lastName:String, firstNameValueChange: (String) 
         value = lastName,
         leadingIcon = { Spacer(modifier = Modifier.width(30.dp))},
         label = { Text(text = "Last Name")},
-        onValueChange = lastNameValueChange,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+        onValueChange = lastNameValueChange
+        ,keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
     )
 
 }
 
 @ExperimentalMaterialApi
 @Composable
-fun PhoneField(phoneNo:String,labelText: String,icon: ImageVector,keyboardType: KeyboardType,onPhoneValueChange:(String)->Unit,
-        options:List<String>) {
+fun CombinedField(
+    phoneNo:String?=null,labelText: String,icon: ImageVector
+    ,keyboardType: KeyboardType,onPhoneValueChange:((String)->Unit)?=null,
+    options:List<String>,list:MutableList<LabeledPhone>?=null,index:Int = 0,vm:AddContactViewModel?=null) {
+
+
+
+    var phone by remember {
+        mutableStateOf("")
+    }
+
+    if(vm!=null){
+        if(list!!.size == index+1 && phone.isNotBlank() && list.last().value != phone ){
+           // vm.phoneCount.value ++
+        }
+    }
 
    CustomOutLineTextField(
-       value = phoneNo,
+       value = phoneNo ?: phone,
        labelText = labelText,
        icon = icon,
        keyboardType = keyboardType ,
-       onValueChange = onPhoneValueChange)
+       onValueChange = onPhoneValueChange ?: {
+           vm!!.addPhoneList(index,LabeledPhone(phone,Label.LocationWork))
+          // list!!.add(index,LabeledPhone(phone,Label.LocationWork))
+           phone = it
+
+       })
 
     ExposedDropDown(options)
 
 
 }
 
+
+@Composable
+fun CompoundField(onValueChange: (String) -> Unit) {
+
+    var value by remember {
+        mutableStateOf("")
+    }
+
+    TextField(
+        value = value,
+        onValueChange = {
+            value = it
+            onValueChange.invoke(it)
+        })
+
+}
 
 @ExperimentalMaterialApi
 @Composable
@@ -294,14 +347,14 @@ fun ExposedDropDown(options: List<String>) {
     var selectedOptionText by remember { mutableStateOf(options[0]) }
 
     ExposedDropdownMenuBox(
-        modifier =Modifier.padding(PaddingValues(30.dp, 0.dp, 40.dp, 0.dp)),
+        modifier =Modifier.padding(PaddingValues(30.dp, 1.dp, 40.dp, 0.dp)),
         expanded = expanded,
         onExpandedChange = {
         expanded = !expanded
     }) {
         TextField(modifier = Modifier
             .background(MaterialTheme.colors.onSecondary)
-            .fillMaxWidth(0.7f),
+            .fillMaxWidth(),
             readOnly = true,
             value = selectedOptionText,
             onValueChange = { },
@@ -314,7 +367,7 @@ fun ExposedDropDown(options: List<String>) {
         DropdownMenu(expanded = expanded, onDismissRequest = {
                 expanded = false
             },modifier = Modifier
-            .fillMaxWidth(0.5f)
+            .fillMaxWidth()
             .background(MaterialTheme.colors.background)) {
 
                 options.forEach {
@@ -327,7 +380,6 @@ fun ExposedDropDown(options: List<String>) {
                             Spacer(modifier = Modifier.height(10.dp))
                             Divider(modifier = Modifier.fillMaxWidth())
                         }
-
                     }
                 }
 
