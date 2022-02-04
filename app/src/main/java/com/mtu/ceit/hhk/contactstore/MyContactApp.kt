@@ -31,7 +31,8 @@ import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
 
     val navController = rememberAnimatedNavController()
 
-    AnimatedNavHost(navController = navController, startDestination = Screen.ContactListScreen.route){
+    AnimatedNavHost(navController = navController,
+        startDestination = Screen.ContactListScreen.route){
 
         composable(Screen.HomeScreen.route){
             Home()
@@ -92,7 +93,7 @@ import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
                 slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(500))
             }){
 
-            ContactAdd()
+            ContactAdd(navController)
 
         }
 

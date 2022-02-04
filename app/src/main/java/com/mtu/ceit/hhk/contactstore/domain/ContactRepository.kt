@@ -10,7 +10,7 @@ interface ContactRepository {
 
     suspend fun getAllContactsDetails()
 
-    suspend fun insertContact()
+    suspend fun insertContact(contactDetail: ContactDetail)
 
     suspend fun getContactDetail(contact_id:Long):ContactDetail
 }

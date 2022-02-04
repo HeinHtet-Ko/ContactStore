@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Contact Store</string>
+
+    <string-array name="labels">
+        <item>Mobile</item>
+        <item>Home</item>
+        <item>Work</item>
+        <item>Other</item>
+    </string-array>
 </resources>

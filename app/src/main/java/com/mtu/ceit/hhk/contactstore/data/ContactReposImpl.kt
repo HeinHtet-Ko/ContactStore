@@ -38,23 +38,33 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
 
     }
 
-    override suspend fun insertContact() {
-        val lb = LabeledPhone("lak",Label.PhoneNumberAssistant)
-        val lb2 = LabeledPhone("09s",Label.LocationWork)
+    override suspend fun insertContact(contactDetail: ContactDetail) {
+
+        Log.d("insert", "insertContact: ${contactDetail.firstName} ${contactDetail.lastName}")
         contactStore.execute {
             insert {
 
+                contactDetail.firstName?.let {
+                    firstName = it
+                }
 
-                phone(
-                    lb.value,
-                    lb.label
-                )
-                phone(
-                    lb2.value,
-                    lb2.label
-                )
+                contactDetail.lastName?.let {
+                    lastName = it
+                }
+
+                contactDetail.phones.forEach {
+                    phone( it.value,it.label )
+                }
+                contactDetail.mails?.forEach {
+                    mail(it.value,it.label)
+                }
+
                // webAddress("ahsd",Label.Other)
-                mail("err",Label.LocationWork)
+
+
+                note = contactDetail.note
+
+                contactDetail.webAddress?.let { webAddress(it,Label.LocationHome) }
 
               //  imageData = ImageData(byteArrayOf("sjsjd".toByte()))
 
