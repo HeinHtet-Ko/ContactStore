@@ -1,6 +1,7 @@
 package com.mtu.ceit.hhk.contactstore.domain
 
-import com.mtu.ceit.hhk.contactstore.domain.models.Contact
+
+import com.alexstyl.contactstore.Contact
 import com.mtu.ceit.hhk.contactstore.domain.models.ContactDetail
 import kotlinx.coroutines.flow.Flow
 
@@ -12,5 +13,9 @@ interface ContactRepository {
 
     suspend fun insertContact(contactDetail: ContactDetail)
 
+    suspend fun deleteContact(contactIdList:List<Long>)
+
     suspend fun getContactDetail(contact_id:Long):ContactDetail
+
+    suspend fun toggleFavourite(contact_id:Long)
 }

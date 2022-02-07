@@ -1,87 +1,74 @@
 package com.mtu.ceit.hhk.contactstore
 
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.content.res.Resources
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.provider.ContactsContract
 import android.util.Log
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.ConstraintSet
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexstyl.contactstore.Label
-import com.mtu.ceit.hhk.contactstore.domain.models.ContactDetail
 import com.mtu.ceit.hhk.contactstore.features.contactdetail.ContactDetailViewModel
-import com.mtu.ceit.hhk.contactstore.features.contactlist.LocalContactListViewModel
 import com.mtu.ceit.hhk.contactstore.features.convertUriToBitmap
 import com.mtu.ceit.hhk.contactstore.ui.theme.*
-import kotlinx.coroutines.delay
-import kotlin.math.max
-import kotlin.math.min
 
+@SuppressLint("UnrememberedMutableState")
 @ExperimentalFoundationApi
 @Composable
-fun ContactDetail(navController: NavController,contactID:Long,contactVM:ContactDetailViewModel = hiltViewModel()) {
+fun ContactDetail(navController: NavController,
+                  contactID:Long,
+                  contactVM:ContactDetailViewModel = hiltViewModel()) {
 
 
-
-//    LaunchedEffect(key1 = Unit){
-//        contactVM.fetchContactDetail(contactID)
-//    }
 
     val contactDetail = remember {
         contactVM.fetchContactDetail(contactID)
         contactVM.contactDetail.value!!
     }
-    val isStarred = remember {
-        mutableStateOf(contactDetail.isStarred)
-    }
-    val colorbyStarred = if(isStarred.value) Color.Yellow  else Color.Unspecified
+
+//    val isStarred = remember {
+//        mutableStateOf(contactDetail.isStarred)
+//    }
+
+    var colorbyStarred = mutableStateOf( if(contactVM.contactDetail.value!!.isStarred) Color.Yellow  else Color.Unspecified)
+
+
+    Log.d("lechanged", "ContactDetail: it fucks ${colorbyStarred.value}")
+
+//    LaunchedEffect(key1 = contactVM.contactDetail) {
+//        Log.d("lechanged", "ContactDetail: fuck it ${contactVM.contactDetail.value!!.isStarred}")
+//        colorbyStarred.value = if(contactVM.contactDetail.value!!.isStarred)Color.Yellow else Color.Unspecified
+//    }
+
 
     val onArrowPressed = remember {
         {
@@ -90,9 +77,6 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:ContactD
         }
     }
     val scst = rememberScrollState()
-
-
-
     val alp = maxOf(0f,(1-(scst.value)/500f))
 
 
@@ -139,7 +123,9 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:ContactD
         }
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter ){
 
-            TopActionBar(onArrowPressed,contactDetail.displayName ?: "" , alp)
+            TopActionBar(onArrowPressed,contactDetail.displayName ?: "" , alp, onStarClick = {
+                contactVM.toggleFav(contactID)
+            },colorbyStarred.value)
 
         }
 
@@ -168,7 +154,6 @@ fun ContactDetail(navController: NavController,contactID:Long,contactVM:ContactD
             Row {
                 FloatingButton(R.drawable.ic_upload, GreenVariant)
                 Spacer(modifier = Modifier.width(10.dp))
-               // FloatingButton(R.drawable.ic_delete, RedVariant)
             }
         }
         
@@ -225,7 +210,6 @@ fun ContactImage(imgByteArray: ByteArray?,alpha:Float) {
                 .graphicsLayer {
                     this.alpha = alpha
                 }
-                .background(Primary)
                 .fillMaxWidth()
                 .height(400.dp)
                 .clickable {
@@ -244,7 +228,6 @@ fun ContactImage(imgByteArray: ByteArray?,alpha:Float) {
                 .graphicsLayer {
                     this.alpha = alpha
                 }
-                .background(Primary)
                 .fillMaxWidth()
                 .height(400.dp)
                 .clickable {
@@ -259,7 +242,13 @@ fun ContactImage(imgByteArray: ByteArray?,alpha:Float) {
 }
 
 @Composable
-fun TopActionBar(onArrowPressed:()->Unit,name:String,alpha: Float) {
+fun TopActionBar(
+    onArrowPressed: () -> Unit,
+    name: String,
+    alpha: Float,
+    onStarClick: () -> Unit,
+    starColor:Color
+) {
     Box(modifier = Modifier
         .fillMaxWidth()
         .height(80.dp)
@@ -295,16 +284,15 @@ fun TopActionBar(onArrowPressed:()->Unit,name:String,alpha: Float) {
         Row(modifier = Modifier.alpha(alpha))
         {
             IconButton(onClick = {
-                //  isStarred.value = !isStarred.value
+
             }, modifier = Modifier) {
                 Icon(painter = painterResource(id = R.drawable.ic_edit)
                     , contentDescription = null, modifier = Modifier.size(28.dp) )
             }
-            IconButton(onClick = {
-               // isStarred.value = !isStarred.value
-            }, modifier = Modifier) {
+            IconButton(onClick = onStarClick, modifier = Modifier) {
                 Icon(painter = painterResource(id = R.drawable.ic_star_rate)
-                    , contentDescription = null, modifier = Modifier.size(33.dp) )
+                    , contentDescription = null, modifier = Modifier.size(33.dp),
+                tint = starColor)
             }
         }
 
@@ -353,6 +341,9 @@ fun PhoneCard( drawableID:Int, rawValue:String, label:Label) {
             .fillMaxWidth()
             .height(100.dp)
             .padding(20.dp, 10.dp)
+            .clickable {
+
+            }
         ,
         elevation = 10.dp,
         shape = RoundedCornerShape(3.dp),
@@ -384,13 +375,3 @@ fun PhoneCard( drawableID:Int, rawValue:String, label:Label) {
 
 }
 
-
-
-
-@ExperimentalFoundationApi
-@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
-@Composable
-fun PrevDetail(){
-   // ContactDetail()
-
-}

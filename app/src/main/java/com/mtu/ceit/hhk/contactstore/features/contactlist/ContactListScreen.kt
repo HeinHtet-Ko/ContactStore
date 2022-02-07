@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -26,12 +28,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.alexstyl.contactstore.Contact
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.mtu.ceit.hhk.contactstore.FloatingButton
 import com.mtu.ceit.hhk.contactstore.R
 import com.mtu.ceit.hhk.contactstore.Screen
-import com.mtu.ceit.hhk.contactstore.domain.models.Contact
 import com.mtu.ceit.hhk.contactstore.ui.theme.GreenVariant
 import com.mtu.ceit.hhk.contactstore.ui.theme.RedVariant
 
@@ -45,16 +47,8 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
 
 
 
+    val list = contactVM.contactList.value
 
-//    val perState = rememberMultiplePermissionsState(permissions = listOf(
-//        android.Manifest.permission.WRITE_CONTACTS,
-//        android.Manifest.permission.READ_CONTACTS,
-//        android.Manifest.permission.CALL_PHONE
-//    ))
-
-    val list = remember {
-        contactVM.contactList.value
-    }
 
     var selectedList by remember {
         mutableStateOf(mutableListOf<Contact>())
@@ -82,8 +76,7 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
      val clickItem:(Contact)->Unit = remember {
          {
              contact: Contact ->
-             contactVM.getContactDetail(contact.id)
-             navController.navigate(Screen.ContactDetailScreen.createRoute(contact.id))
+             navController.navigate(Screen.ContactDetailScreen.createRoute(contact.contactId))
          }
     }
 
@@ -92,7 +85,11 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
    val addAll = remember {
        {
            val tempList = mutableListOf<Contact>()
-           tempList.addAll(list)
+           if(selectedList.size == list.size) {
+               tempList.clear()
+           }else{
+               tempList.addAll(list)
+           }
            selectedList = tempList
        }
    }
@@ -155,7 +152,7 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
                 {
                     items(items =  list,
                         key = {
-                            it.id
+                            it.contactId
                         }){ contact: Contact ->
                         ContactListItem(contact,isSelecting,selectedList,toggleList){
                             clickItem.invoke(contact)
@@ -177,7 +174,13 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
 
                     Column {
                         AnimatedVisibility(visible = isSelecting) {
-                            BottomActionBar()
+                            BottomActionBar(onDeleteItems = {
+                                Log.d("selectedtrack", "ContactList: ${selectedList[0].contactId}")
+                                contactVM.deleteContacts(selectedList.map { it.contactId })
+                                closeSelect()
+                            }, onUploadItems = {
+
+                            })
                         }
                     }
 
@@ -226,7 +229,7 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
 }
 
 @Composable
-fun BottomActionBar() {
+fun BottomActionBar(onDeleteItems:()->(Unit),onUploadItems:()->(Unit) ) {
 
     Row(modifier = Modifier
         .fillMaxWidth()
@@ -235,11 +238,14 @@ fun BottomActionBar() {
         .padding(35.dp, 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center) {
-        Column (horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable {
-
-        }){
-            Icon(painter = painterResource(id = R.drawable.ic_delete), contentDescription = "delete contacts"
-            , tint = RedVariant)
+        Column (horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .clickable {
+                onDeleteItems.invoke()
+            }){
+            Icon(painter = painterResource(id = R.drawable.ic_delete)
+                ,contentDescription = "delete contacts"
+                ,tint = RedVariant)
             Text(text = "Delete", fontSize = 12.sp)
         }
        
@@ -278,7 +284,6 @@ fun SelectContactHeader(selectedList:List<Contact>, closeSelect:()->Unit, addAll
             }) {
                 Icon(painter = painterResource(id = R.drawable.ic_close)
                     , contentDescription = null
-                    , tint = RedVariant
                     ,modifier = Modifier.size(33.dp))
             }
 
@@ -291,7 +296,6 @@ fun SelectContactHeader(selectedList:List<Contact>, closeSelect:()->Unit, addAll
         }) {
             Icon(painter = painterResource(id = R.drawable.ic_selectall)
                 , contentDescription = null
-                , tint = GreenVariant
                 ,modifier = Modifier.size(33.dp))
         }
         }
@@ -329,7 +333,6 @@ fun ContactHeader(title:String,isSelecting:Boolean,toggleSe:()->Unit,list:List<C
         }) {
             Icon(painter = painterResource(id = R.drawable.ic_select)
                 , contentDescription = null
-                , tint = GreenVariant
                 ,modifier = Modifier.size(33.dp))
         }
     }

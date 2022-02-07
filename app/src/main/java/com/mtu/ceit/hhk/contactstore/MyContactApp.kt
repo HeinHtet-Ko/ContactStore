@@ -15,7 +15,7 @@ import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.mtu.ceit.hhk.contactstore.features.ContactAdd
+import com.mtu.ceit.hhk.contactstore.features.contactadd.ContactAdd
 import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
 
 
@@ -32,7 +32,7 @@ import com.mtu.ceit.hhk.contactstore.features.contactlist.ContactList
     val navController = rememberAnimatedNavController()
 
     AnimatedNavHost(navController = navController,
-        startDestination = Screen.ContactListScreen.route){
+        startDestination = Screen.SplashScreen.route){
 
         composable(Screen.HomeScreen.route){
             Home()

@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mtu.ceit.hhk.contactstore.domain.GetContactDetail
+import com.mtu.ceit.hhk.contactstore.domain.ToggleFavourite
 import com.mtu.ceit.hhk.contactstore.domain.models.ContactDetail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -12,12 +13,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ContactDetailViewModel @Inject constructor(
-    val getContactDetail: GetContactDetail
+    private val getContactDetail: GetContactDetail,
+    private val toggleFavourite: ToggleFavourite
 ):ViewModel(){
 
-    init {
-
-    }
 
     private val _contactDetail:MutableState<ContactDetail?> = mutableStateOf(null)
 
@@ -27,6 +26,15 @@ class ContactDetailViewModel @Inject constructor(
 
         viewModelScope.launch {
             _contactDetail.value = getContactDetail.invoke(contactID)
+        }
+
+    }
+
+    fun toggleFav(id:Long){
+        viewModelScope.launch {
+            toggleFavourite.invoke(id)
+           _contactDetail.value = getContactDetail.invoke(id)
+
         }
 
     }

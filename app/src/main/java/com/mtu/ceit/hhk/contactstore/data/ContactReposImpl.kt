@@ -2,7 +2,7 @@ package com.mtu.ceit.hhk.contactstore.data
 
 import android.util.Log
 import com.alexstyl.contactstore.*
-import com.mtu.ceit.hhk.contactstore.domain.models.Contact
+
 import com.mtu.ceit.hhk.contactstore.domain.ContactRepository
 import com.mtu.ceit.hhk.contactstore.domain.models.ContactDetail
 import com.mtu.ceit.hhk.contactstore.domain.models.LabeledMail
@@ -13,24 +13,25 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class ContactReposImpl @Inject constructor(val contactStore: ContactStore):ContactRepository {
     override suspend fun getAllContacts(): Flow<List<Contact>> {
 
-        Log.d("Allcontacttrack", "getAllContacts: init $this")
-        return contactStore.fetchContacts(
-            columnsToFetch = listOf(ContactColumn.Mails,ContactColumn.Image),
-//            predicate = ContactPredicate.ContactLookup(
-//                inContactIds = listOf(2)
-//            )
-        ).map {
-            it.map {
-
-              //  Log.d("contactidnavigate", "altgetAllContacts: ${it.mails[0]}")
-                Contact(it.contactId,it.displayName,it.isStarred)
-            }
-        }
+        return contactStore.fetchContacts()
+//        return contactStore.fetchContacts(
+//         //   columnsToFetch = listOf(ContactColumn.Mails,ContactColumn.Image),
+////            predicate = ContactPredicate.ContactLookup(
+////                inContactIds = listOf(2)
+////            )
+//        ).map {
+//            it.map {
+//
+//              //  Log.d("contactidnavigate", "altgetAllContacts: ${it.mails[0]}")
+//                Contact(it.contactId,it.displayName,it.isStarred)
+//            }
+//        }
 
     }
 
@@ -56,8 +57,10 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
                     phone( it.value,it.label )
                 }
                 contactDetail.mails?.forEach {
+                    Log.d("mailtrackerlabel", "insertContact: ${it.label}")
                     mail(it.value,it.label)
                 }
+
 
                // webAddress("ahsd",Label.Other)
 
@@ -70,6 +73,22 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
 
             }
         }
+    }
+
+
+    override suspend fun deleteContact(contactIdList: List<Long>) {
+
+
+
+
+            contactIdList.forEach {
+                Log.d("idtracker", "deleteContact: $it for each")
+                withContext(IO){
+                    contactStore.execute {
+                        delete(it)
+                    }
+                }
+            }
     }
 
     override suspend fun getContactDetail(contact_id: Long):ContactDetail {
@@ -105,6 +124,8 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
             LabeledMail(it.value.raw,it.label)
         }
 
+
+
         return ContactDetail(
             id = contact.contactId,
             displayName = contact.displayName,
@@ -112,6 +133,27 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
             isStarred = contact.isStarred,
             phones = phones,
             mails = mails)
+
+    }
+
+    override suspend fun toggleFavourite(contact_id: Long) {
+
+        val contacts = contactStore.fetchContacts(
+           predicate = ContactPredicate.ContactLookup(inContactIds = listOf(contact_id))
+        ).first()
+        if(contacts.isEmpty()) return // no found contacts
+
+        val contact = contacts.first()
+
+
+
+        contactStore.execute {
+            update(contact.mutableCopy().apply {
+                isStarred = !isStarred
+
+            })
+        }
+
 
     }
 
