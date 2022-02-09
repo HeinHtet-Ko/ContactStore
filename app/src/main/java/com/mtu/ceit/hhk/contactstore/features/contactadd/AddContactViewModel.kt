@@ -6,7 +6,9 @@ import androidx.compose.ui.res.stringArrayResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alexstyl.contactstore.Label
+import com.alexstyl.contactstore.LabeledValue
 import com.mtu.ceit.hhk.contactstore.R
+import com.mtu.ceit.hhk.contactstore.domain.GetContactDetail
 import com.mtu.ceit.hhk.contactstore.domain.PutContact
 import com.mtu.ceit.hhk.contactstore.domain.models.ContactDetail
 import com.mtu.ceit.hhk.contactstore.domain.models.LabeledMail
@@ -18,22 +20,33 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddContactViewModel @Inject constructor(
-    private val putContact: PutContact
+    private val putContact: PutContact,
+    private val getContactDetail: GetContactDetail
 ):ViewModel() {
 
 
 
-    private val firstName = mutableStateOf("")
+    val firstName = mutableStateOf("")
     val lastName = mutableStateOf("")
 
-    private val phoneList = mutableListOf<LabeledPhone>()
+     var phoneList = mutableListOf<LabeledPhone>()
     val phoneCount = mutableStateOf(1)
 
-    private val mailList = mutableListOf<LabeledMail>()
+     val mailList = mutableListOf<LabeledMail>()
     val mailCount = mutableStateOf(1)
 
-    private val webAddress = mutableStateOf("")
+//    val mailValue= mutableStateOf("")
+//    val phoneValue = mutableStateOf("")
+
+     val webAddress = mutableStateOf("")
     val note = mutableStateOf("")
+
+    val testList = mutableListOf<String>("haha","it should")
+    val testUpdateList = mutableListOf<String>("fuck you","declarative","shame on you jc")
+    val testString = mutableStateOf("")
+    val testCount = mutableStateOf(1)
+
+    val updateContact = mutableStateOf<ContactDetail?>(null)
 
     fun onFirstNameChange(fName:String){
         firstName.value = fName
@@ -51,8 +64,23 @@ class AddContactViewModel @Inject constructor(
         this.note.value = note
     }
 
+    fun getContactUpdate(id:Long){
+
+        viewModelScope.launch {
+            val contact = getContactDetail.invoke(id)
+            updateContact.value = contact
+            firstName.value = contact.firstName.toString()
+            lastName.value = contact.lastName.toString()
+            note.value = contact.note ?: ""
+            webAddress.value = contact.webAddress ?: ""
+            phoneList = contact.phones.toMutableList()
+
+        }
+
+    }
+
     fun addPhoneList(index:Int,labelPhone:LabeledPhone){
-       // val labelPhone = LabeledPhone(phone,phoneLabel.value)
+
         if(phoneList.size == index){
             phoneList.add(index,labelPhone)
         }else{
@@ -65,7 +93,7 @@ class AddContactViewModel @Inject constructor(
 
 
     fun addMailList(index:Int,labeledMail: LabeledMail) {
-        Log.d("labelmailtracker", "ddaddMailList: ${labeledMail.label}")
+
         if (mailList.size == index){
             mailList.add(index,labeledMail)
         }else {
@@ -78,9 +106,6 @@ class AddContactViewModel @Inject constructor(
     }
 
     fun addContact() {
-        phoneList.forEach {
-            Log.d("labeltracker", "addContacter: ${it.value} ${it.label}")
-        }
         viewModelScope.launch {
             putContact.invoke(ContactDetail(
                 firstName = firstName.value,
@@ -95,23 +120,4 @@ class AddContactViewModel @Inject constructor(
 
 }
 
-fun String.toLabel():Label {
 
-    return when(this) {
-        "Mobile" -> {
-            Label.PhoneNumberMobile
-        }
-        "Home" -> {
-            Label.LocationHome
-        }
-        "Work" -> {
-            Label.LocationWork
-        }
-        "Other" -> {
-            Label.Other
-        }
-        else -> {
-            Label.Other
-        }
-    }
-}

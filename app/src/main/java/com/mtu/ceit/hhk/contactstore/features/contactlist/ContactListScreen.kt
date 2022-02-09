@@ -11,13 +11,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -30,8 +28,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexstyl.contactstore.Contact
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.mtu.ceit.hhk.contactstore.FloatingButton
 import com.mtu.ceit.hhk.contactstore.R
 import com.mtu.ceit.hhk.contactstore.Screen
 import com.mtu.ceit.hhk.contactstore.ui.theme.GreenVariant
@@ -112,8 +108,7 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
 
     }
 
-//    val i = Intent(Intent.ACTION_CALL)
-//    i.data = Uri.parse("tel:09770109404")
+
 
     val listState = rememberLazyListState()
 

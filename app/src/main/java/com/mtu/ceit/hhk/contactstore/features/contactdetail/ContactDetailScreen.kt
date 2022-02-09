@@ -1,14 +1,11 @@
-package com.mtu.ceit.hhk.contactstore
+package com.mtu.ceit.hhk.contactstore.features.contactdetail
 
-import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,8 +24,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 
 import androidx.compose.ui.unit.sp
@@ -36,12 +33,15 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.alexstyl.contactstore.Label
-import com.mtu.ceit.hhk.contactstore.features.contactdetail.ContactDetailViewModel
+import com.google.gson.Gson
+import com.mtu.ceit.hhk.contactstore.R
+import com.mtu.ceit.hhk.contactstore.Screen
+import com.mtu.ceit.hhk.contactstore.domain.models.LabeledValue
 import com.mtu.ceit.hhk.contactstore.features.convertUriToBitmap
+import com.mtu.ceit.hhk.contactstore.features.toStringValue
 import com.mtu.ceit.hhk.contactstore.ui.theme.*
 
-@SuppressLint("UnrememberedMutableState")
+
 @ExperimentalFoundationApi
 @Composable
 fun ContactDetail(navController: NavController,
@@ -55,19 +55,13 @@ fun ContactDetail(navController: NavController,
         contactVM.contactDetail.value!!
     }
 
-//    val isStarred = remember {
-//        mutableStateOf(contactDetail.isStarred)
-//    }
+    val colorbyStarred = remember {
+        mutableStateOf(if(contactDetail.isStarred) Color.Yellow  else Color.Unspecified)
+    }
 
-    var colorbyStarred = mutableStateOf( if(contactVM.contactDetail.value!!.isStarred) Color.Yellow  else Color.Unspecified)
-
-
-    Log.d("lechanged", "ContactDetail: it fucks ${colorbyStarred.value}")
-
-//    LaunchedEffect(key1 = contactVM.contactDetail) {
-//        Log.d("lechanged", "ContactDetail: fuck it ${contactVM.contactDetail.value!!.isStarred}")
-//        colorbyStarred.value = if(contactVM.contactDetail.value!!.isStarred)Color.Yellow else Color.Unspecified
-//    }
+    LaunchedEffect(key1 = contactVM.contactDetail.value) {
+        colorbyStarred.value =  if(contactVM.contactDetail.value!!.isStarred) Color.Yellow  else Color.Unspecified
+    }
 
 
     val onArrowPressed = remember {
@@ -76,6 +70,16 @@ fun ContactDetail(navController: NavController,
             Unit
         }
     }
+
+    val onEditClick = remember {
+        {
+            contactDetail.id?.let {
+                navController.navigate(Screen.ContactAddScreen.createRoute(it))
+            }
+            Unit
+        }
+    }
+
     val scst = rememberScrollState()
     val alp = maxOf(0f,(1-(scst.value)/500f))
 
@@ -92,7 +96,6 @@ fun ContactDetail(navController: NavController,
                 .fillMaxWidth()
                 .padding(7.dp, 330.dp, 7.dp, 20.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(DarkVariantOne)
                 .padding(0.dp, 20.dp, 10.dp, 120.dp)
 
             ) {
@@ -111,23 +114,35 @@ fun ContactDetail(navController: NavController,
                     fontFamily = FontFamily.Serif
                 )
 
-                contactDetail.phones.map {
-                    PhoneCard(R.drawable.ic_call,it.value,it.label)
+
+               if(!contactDetail.phones.isNullOrEmpty()) {
+                   ValueCard(iconID = R.drawable.ic_call, iconTint = GreenVariant,contactDetail.phones)
+               }
+
+
+                if (!contactDetail.mails.isNullOrEmpty())
+                {
+                    ValueCard(iconID = R.drawable.ic_mail, iconTint = RedVariant, valueList = contactDetail.mails)
                 }
-                contactDetail.mails?.map {
-                    PhoneCard(R.drawable.ic_mail,it.value,it.label)
+
+                if(!contactDetail.note.isNullOrBlank() or !contactDetail.webAddress.isNullOrBlank())
+                {
+                    MoreInfoCard(
+                        displayName = contactDetail.displayName ?: "",
+                        webAddress = contactDetail.webAddress,
+                        note = contactDetail.note)
+
                 }
-                Spacer(modifier = Modifier.height(500.dp))
+
+                Spacer(modifier = Modifier.height(400.dp))
             }
 
         }
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter ){
 
-            TopActionBar(onArrowPressed,contactDetail.displayName ?: "" , alp, onStarClick = {
-                contactVM.toggleFav(contactID)
-            },colorbyStarred.value)
 
-        }
+       TopActionBar(onArrowPressed,contactDetail.displayName ?: "" , alp, onStarClick = {
+            contactVM.toggleFav(contactID)
+        }, onEditClick = onEditClick , starColor = colorbyStarred.value)
 
 
     }
@@ -137,29 +152,8 @@ fun ContactDetail(navController: NavController,
         .padding(30.dp),
         contentAlignment = Alignment.BottomEnd,) {
 
-        var animaSt by remember {
-            mutableStateOf(true)
-        }
-
-        AnimatedVisibility(visible =animaSt,
-        enter = fadeIn()+ slideIn(
-            initialOffset = {IntOffset(it.height,1200)},
-         animationSpec = (tween(500))
-        ),
-            exit = fadeOut() +slideOut(
-                targetOffset = {IntOffset(it.height,1200)},
-                animationSpec = (tween(500))
-            )
-        ) {
-            Row {
-                FloatingButton(R.drawable.ic_upload, GreenVariant)
-                Spacer(modifier = Modifier.width(10.dp))
-            }
-        }
-        
-
-        
-    }
+        FloatingButton(R.drawable.ic_upload, BlueVariant)
+ }
 }
 
 
@@ -174,7 +168,7 @@ fun ContactImage(imgByteArray: ByteArray?,alpha:Float) {
 
     var imageBitmap:Bitmap by remember {
         val bm = if(imgByteArray == null){
-            ResourcesCompat.getDrawable(context.resources,R.drawable.ic_id,context.theme)!!.toBitmap()
+            ResourcesCompat.getDrawable(context.resources, R.drawable.ic_id,context.theme)!!.toBitmap()
 
         } else
         {
@@ -242,64 +236,118 @@ fun ContactImage(imgByteArray: ByteArray?,alpha:Float) {
 }
 
 @Composable
+fun MoreInfoCard(displayName:String,webAddress:String?,note:String?) {
+
+    Card( modifier = Modifier
+        .fillMaxWidth()
+        .wrapContentHeight()
+        .padding(25.dp, 5.dp),
+        elevation = 10.dp,
+        shape = RoundedCornerShape(3.dp)) {
+
+        Column(
+            modifier = Modifier.padding(20.dp,20.dp)
+        ){
+            Text(
+                text = "About $displayName",
+                modifier = Modifier.padding(8.dp),
+                fontSize = 20.sp)
+            Divider()
+            Spacer(modifier = Modifier.height(10.dp))
+            if(!webAddress.isNullOrBlank()) {
+               MoreInfoField(title = "WebAddress", subtitle = webAddress ,
+                   subTextColor = Primary, fontStyle = FontStyle.Italic )
+            }
+            if(!note.isNullOrEmpty()) {
+                MoreInfoField(title = "Note", subtitle = note)
+            }
+        }
+    }
+
+}
+
+@Composable
+fun MoreInfoField(title:String,subtitle:String,subTextColor:Color?=null,fontStyle: FontStyle?=null){
+    Text(
+        text = title,
+        modifier = Modifier.padding(7.dp),
+        fontSize = 18.sp,
+       )
+    Text(
+        text = subtitle,
+        fontStyle = fontStyle ?: FontStyle.Normal,
+        modifier = Modifier
+            .clip(RoundedCornerShape(3.dp))
+            .clickable {
+
+            }
+            .padding(7.dp),
+        fontSize = 15.sp,
+        color = subTextColor ?: Color.Unspecified)
+}
+
+@Composable
 fun TopActionBar(
     onArrowPressed: () -> Unit,
     name: String,
     alpha: Float,
+    onEditClick:()->Unit,
     onStarClick: () -> Unit,
     starColor:Color
 ) {
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .height(80.dp)
-        .padding(0.dp, 0.dp, 15.dp, 10.dp),
-        contentAlignment = Alignment.TopEnd){
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter ){
 
         Box(modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer {
-                this.alpha = 1f - alpha
+            .fillMaxWidth()
+            .height(80.dp)
+            .padding(0.dp, 0.dp, 15.dp, 10.dp),
+            contentAlignment = Alignment.TopEnd){
+
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    this.alpha = 1f - alpha
+                }
+                .background(DarkVariantOne),
+                contentAlignment = Alignment.Center) {
+                Text(
+                    text = name,
+                    fontSize = 20.sp ,
+                    modifier = Modifier.padding(10.dp),
+                    fontFamily = FontFamily.Serif)
             }
-            .background(DarkVariantOne),
-            contentAlignment = Alignment.Center) {
-            Text(
-                text = name,
-                fontSize = 20.sp ,
-                modifier = Modifier.padding(10.dp),
-                fontFamily = FontFamily.Serif)
+
+            Box(modifier = Modifier
+                .alpha(alpha)
+                .fillMaxSize(),
+                contentAlignment = Alignment.TopStart) {
+                IconButton(onClick = {
+                    onArrowPressed.invoke()
+                }, modifier = Modifier
+                ) {
+                    Icon(contentDescription = null,
+                        modifier = Modifier.size(30.dp), imageVector = Icons.Filled.ArrowBack )
+                }
+            }
+            Row(modifier = Modifier.alpha(alpha))
+            {
+                IconButton(onClick = onEditClick
+                , modifier = Modifier) {
+                    Icon(painter = painterResource(id = R.drawable.ic_edit)
+                        , contentDescription = null, modifier = Modifier.size(28.dp) )
+                }
+                IconButton(onClick = onStarClick, modifier = Modifier) {
+                    Icon(painter = painterResource(id = R.drawable.ic_star_rate)
+                        , contentDescription = null, modifier = Modifier.size(33.dp),
+                        tint = starColor)
+                }
+            }
+
+
+
         }
-
-        Box(modifier = Modifier
-            .alpha(alpha)
-            .fillMaxSize(),
-            contentAlignment = Alignment.TopStart) {
-            IconButton(onClick = {
-                onArrowPressed.invoke()
-            }, modifier = Modifier
-            ) {
-                Icon(contentDescription = null,
-                    modifier = Modifier.size(30.dp), imageVector = Icons.Filled.ArrowBack )
-            }
-        }
-        Row(modifier = Modifier.alpha(alpha))
-        {
-            IconButton(onClick = {
-
-            }, modifier = Modifier) {
-                Icon(painter = painterResource(id = R.drawable.ic_edit)
-                    , contentDescription = null, modifier = Modifier.size(28.dp) )
-            }
-            IconButton(onClick = onStarClick, modifier = Modifier) {
-                Icon(painter = painterResource(id = R.drawable.ic_star_rate)
-                    , contentDescription = null, modifier = Modifier.size(33.dp),
-                tint = starColor)
-            }
-        }
-
-
 
     }
-
 }
 
 @Composable
@@ -313,65 +361,67 @@ fun FloatingButton(drawableID: Int,color: Color) {
 
     }
 
+}
+
+@Composable
+fun ValueCard( iconID:Int,iconTint:Color,valueList:List<LabeledValue<String>>) {
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .padding(25.dp, 5.dp),
+        elevation = 10.dp,
+        shape = RoundedCornerShape(3.dp)) {
+
+
+            Row(
+                Modifier
+                    .fillMaxSize()
+                    .padding(25.dp, 20.dp)) {
+
+                Icon(
+                    painter = painterResource(id = iconID),
+                    contentDescription =null,
+                    modifier = Modifier
+                        .padding(2.dp, 9.dp)
+                        .size(35.dp),
+                    tint = iconTint
+                )
+                Spacer(modifier = Modifier.width(25.dp))
+                ValueField(list = valueList)
+
+            }
+
+
+    }
 
 
 }
 
 @Composable
-fun PhoneCard( drawableID:Int, rawValue:String, label:Label) {
+fun ValueField(list:List<LabeledValue<String>>) {
 
+    val context = LocalContext.current
 
-
-    val labelStr:String = remember {
-        var name = label::class.simpleName ?: ""
-        if(name.contains("Location"))
-            name = name.substringAfter("Location")
-        else if(name.contains("PhoneNumber"))
-            name = name.substringAfter("PhoneNumber")
-        else
-            name
-
-        name
-    }
-
-
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp)
-            .padding(20.dp, 10.dp)
-            .clickable {
-
+    Column {
+        list.map {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(4.dp))
+                .clickable {
+                       val i = Intent(Intent.ACTION_CALL)
+                        i.data = Uri.parse("tel:${it.value.trim()}")
+                        context.startActivity(i)
+                }
+                .padding(7.dp)) {
+                Text(text = it.value, style = MaterialTheme.typography.h6, modifier = Modifier)
+                Text(text = it.lab.toStringValue(), style = MaterialTheme.typography.subtitle2)
+                Spacer(modifier = Modifier.height(10.dp))
             }
-        ,
-        elevation = 10.dp,
-        shape = RoundedCornerShape(3.dp),
-
-
-        ) {
-        Row(
-            Modifier
-                .fillMaxSize()
-                .padding(25.dp, 5.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-
-            Icon(painter = painterResource(id = drawableID)
-                , contentDescription = "call icon",
-                tint = Primary,
-                modifier = Modifier.size(40.dp)
-            )
-            Spacer(modifier = Modifier.width(20.dp))
-            Column (horizontalAlignment = Alignment.Start){
-                Text(text = rawValue, style = MaterialTheme.typography.h6)
-                Text(text = labelStr, style = MaterialTheme.typography.subtitle2)
-            }
-
-
         }
     }
-
-
 }
+
+
 

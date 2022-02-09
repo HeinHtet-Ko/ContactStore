@@ -2,6 +2,7 @@ package com.mtu.ceit.hhk.contactstore.domain.models
 
 import com.alexstyl.contactstore.Label
 
+
 data class ContactDetail(
     val id:Long? = null,
     val displayName:String? = null,
@@ -16,10 +17,15 @@ data class ContactDetail(
 )
 
 data class LabeledPhone(
-    val value:String,
-    val label:Label
-)
+     val phoneValue:String,
+     val label:Label
+):LabeledValue<String>(phoneValue,label)
+
+
 data class LabeledMail(
-    val value:String,
-    val label:Label
-)
+     val mailValue:String,
+     val label:Label
+): LabeledValue<String>(mailValue,label)
+
+sealed class LabeledValue<T>(val value:T,val lab: Label)
+

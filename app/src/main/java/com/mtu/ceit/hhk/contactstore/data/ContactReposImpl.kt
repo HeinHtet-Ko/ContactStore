@@ -102,6 +102,8 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
                ContactColumn.Phones,
                ContactColumn.Mails,
                ContactColumn.Image,
+               ContactColumn.WebAddresses,
+               ContactColumn.Note
 
            )
         ).first().first()
@@ -125,6 +127,10 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
         }
 
 
+        val webAdd = if(contact.webAddresses.isNotEmpty()) contact.webAddresses.first() else null
+
+        val note:String? = contact.note?.raw
+
 
         return ContactDetail(
             id = contact.contactId,
@@ -132,7 +138,9 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
             imgData = contact.imageData?.raw,
             isStarred = contact.isStarred,
             phones = phones,
-            mails = mails)
+            mails = mails,
+            webAddress = webAdd?.value?.raw,
+            note = note)
 
     }
 

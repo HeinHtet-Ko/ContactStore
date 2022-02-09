@@ -25,21 +25,30 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexstyl.contactstore.Label
 import com.mtu.ceit.hhk.contactstore.R
+import com.mtu.ceit.hhk.contactstore.domain.models.ContactDetail
 import com.mtu.ceit.hhk.contactstore.domain.models.LabeledMail
 import com.mtu.ceit.hhk.contactstore.domain.models.LabeledPhone
+import com.mtu.ceit.hhk.contactstore.features.toLabel
 import com.mtu.ceit.hhk.contactstore.ui.theme.*
 import kotlin.math.min
 
 @ExperimentalMaterialApi
 @Composable
-fun ContactAdd(navController: NavController,contactAddVM: AddContactViewModel = hiltViewModel()) {
+fun ContactAdd(navController: NavController,
+                contactID:Long,
+               contactAddVM: AddContactViewModel = hiltViewModel()) {
 
+
+    if (contactID != 0L)
+       contactAddVM.getContactUpdate(contactID)
 
     val scrollState = rememberScrollState()
 
     val labels = stringArrayResource(id = R.array.labels)
 
     val maillabels = labels.copyOfRange(1,4)
+
+
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -64,6 +73,7 @@ fun ContactAdd(navController: NavController,contactAddVM: AddContactViewModel = 
 
 
                 NameField(
+                    firstName = contactAddVM.firstName.value,
                     lastName = contactAddVM.lastName.value,
                     firstNameValueChange = {
                         contactAddVM.onFirstNameChange(it)
@@ -75,20 +85,72 @@ fun ContactAdd(navController: NavController,contactAddVM: AddContactViewModel = 
 
 
                 repeat(contactAddVM.phoneCount.value) { index:Int ->
+                    var phoneValue by remember {
+                        mutableStateOf("")
+                    }
+                    if(contactID != 0L && contactAddVM.updateContact.value != null ){
+                        if(!contactAddVM.updateContact.value!!.phones.isNullOrEmpty()) {
+                            phoneValue = contactAddVM.updateContact.value!!.phones!![index].phoneValue
+                            contactAddVM.phoneCount.value = contactAddVM.updateContact.value!!.phones!!.size
+                        }
+                    }
                     CombinedPhoneField (
-                        options = labels.toList(),
+                        phoneValue = phoneValue
+                        ,options = labels.toList(),
                         onFieldChange = { phone,label ->
+                            phoneValue = phone
                             contactAddVM.addPhoneList(index,LabeledPhone(phone,label.toLabel()))
                         })
                     }
 
-
                 repeat(contactAddVM.mailCount.value) { index:Int ->
-                    CombinedMailField(
-                        options = maillabels.toList()){ mail,label ->
+                    var mailValue by remember {
+                        mutableStateOf("")
+                    }
+
+                    if(contactID != 0L && contactAddVM.updateContact.value != null ){
+                        if(!contactAddVM.updateContact.value!!.mails.isNullOrEmpty()) {
+                            mailValue = contactAddVM.updateContact.value!!.mails!![index].mailValue
+                            contactAddVM.mailCount.value = contactAddVM.updateContact.value!!.mails!!.size
+                        }
+                    }
+
+                    CombinedMailField(options = maillabels.toList(),
+                        mailValue = mailValue){ mail,label ->
+                        mailValue= mail
                         contactAddVM.addMailList(index,LabeledMail(mail,label.toLabel()))
                     }
                 }
+
+//                  repeat(contactAddVM.testCount.value) { index ->
+//                      var con by remember {
+//                          mutableStateOf("")
+//                      }
+//                      if (contactID == 0L){
+//                          if(index != contactAddVM.testList.size)
+//                          con = contactAddVM.testList[index]
+//                          contactAddVM.testCount.value = contactAddVM.testList.size + 1
+//                      }
+//
+//                      CombinedTestField(
+//                          testValue = con,
+//                          onValueChange = {
+//                              con = it
+//                              if(contactAddVM.testList.size == index){
+//                                  contactAddVM.testList.add(index,it)
+//                              }else{
+//                                  contactAddVM.testList[index] = it
+//                              }
+//
+//                              if(index+1 == contactAddVM.testCount.value)
+//                                  contactAddVM.testCount.value = index +2
+//                          },
+//                          options = maillabels.toList(),
+//                          onSelectionChange = {
+//
+//                          }
+//                      )
+//                  }
 
                 var expand by remember {
                     mutableStateOf(false)
@@ -96,7 +158,8 @@ fun ContactAdd(navController: NavController,contactAddVM: AddContactViewModel = 
 
                 AnimatedVisibility(expand) {
                     MoreFieds(
-                        noteStr = contactAddVM.note.value,
+                        webAddress = contactAddVM.webAddress.value
+                        ,noteStr = contactAddVM.note.value,
                         onNoteValueChange = { noteStr ->
                                             contactAddVM.onNoteChange(noteStr)
                         },
@@ -167,32 +230,77 @@ fun ContactAdd(navController: NavController,contactAddVM: AddContactViewModel = 
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun CombinedPhoneField(options: List<String> ,
+fun CombinedTestField(
+    testValue:String,
+    onValueChange: (String) -> Unit,
+    options: List<String>,
+    onSelectionChange: (String) -> Unit
+){
+
+
+    Column() {
+        CustomOutLineField(
+            value = testValue,
+            labelText = "Test",
+            icon = Icons.Default.CheckCircle,
+            keyboardType = KeyboardType.Text,
+            onValueChange = onValueChange)
+        ExposedDropDown(
+            options = options,
+            onSelectionChange = onSelectionChange)
+    }
+
+}
+
+@Composable
+fun CustomOutLineField(value:String,labelText:String,
+                       icon:ImageVector,keyboardType: KeyboardType,
+                           onValueChange:(String)->Unit) {
+
+
+    TextField(
+        modifier = Modifier
+            .padding(PaddingValues(30.dp, 15.dp, 40.dp, 0.dp))
+            .background(MaterialTheme.colors.onSecondary)
+            .fillMaxWidth(),
+        value = value,
+        onValueChange = {
+            onValueChange.invoke(it)
+                        },
+        leadingIcon ={Icon(imageVector =icon, contentDescription = null, tint = Primary)}  ,
+        label = { Text(text = labelText)},
+        keyboardOptions = KeyboardOptions(keyboardType =keyboardType)
+    )
+
+
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun CombinedPhoneField(phoneValue:String,options: List<String>,
                        onFieldChange: (String,String) -> Unit) {
 
-    var phone by remember {
-        mutableStateOf("")
-    }
+
     var label by remember {
         mutableStateOf(options[0])
     }
 
     Column {
             CustomOutLineTextField(
+                value = phoneValue,
                 labelText = "Phone",
                 icon = Icons.Default.Call,
                 keyboardType = KeyboardType.Phone,
-                onValueChange =
-                {
-                    phone = it
-                    onFieldChange(phone,label)
+                onValueChange = {
+                    onFieldChange.invoke(it,label)
                 }
+
             )
 
             ExposedDropDown(options = options){
 
                     label = it
-                    onFieldChange(phone,label)
+                    onFieldChange(phoneValue,label)
 
             }
 
@@ -203,31 +311,31 @@ fun CombinedPhoneField(options: List<String> ,
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun CombinedMailField(options: List<String>, onFieldChange: (String, String) -> Unit) {
+fun CombinedMailField(mailValue:String,options: List<String>, onFieldChange: (String, String) -> Unit) {
 
 
-    var mail by remember {
-        mutableStateOf("")
-    }
+//    var mail by remember {
+//        mutableStateOf("")
+//    }
     var label by remember {
         mutableStateOf(options[0])
     }
 
     Column {
         CustomOutLineTextField(
+            value =mailValue,
             labelText = "Mail",
             icon = Icons.Default.Email,
             keyboardType = KeyboardType.Text,
             onValueChange = {
-                mail = it
-                Log.d("maillabeltracker", "CombinedMailField: $label")
-                onFieldChange.invoke(mail,label)
+
+                onFieldChange.invoke(it,label)
             }
         )
 
         ExposedDropDown(options = options){
             label = it
-            onFieldChange.invoke(mail,label)
+            onFieldChange.invoke(mailValue,label)
         }
 
     }
@@ -236,13 +344,16 @@ fun CombinedMailField(options: List<String>, onFieldChange: (String, String) -> 
 }
 
 @Composable
-fun MoreFieds(noteStr:String,
+fun MoreFieds(
+    webAddress:String,
+    noteStr:String,
               onNoteValueChange:(String)->Unit,
               onWebValueChange:(String)->Unit) {
 
 
     Column {
         CustomOutLineTextField(
+            value = webAddress,
             labelText = " Web Address ",
             icon = Icons.Default.Place,
             keyboardType = KeyboardType.Text,
@@ -269,9 +380,10 @@ fun MoreFieds(noteStr:String,
 }
 
 @Composable
-fun NameField(lastName:String, firstNameValueChange: (String) -> Unit, lastNameValueChange:(String)->Unit) {
+fun NameField(firstName:String,lastName:String, firstNameValueChange: (String) -> Unit, lastNameValueChange:(String)->Unit) {
 
     CustomOutLineTextField(
+        value = firstName,
         icon = Icons.Default.AccountCircle,
         labelText = "First Name",
         keyboardType = KeyboardType.Text,
@@ -344,11 +456,9 @@ fun ExposedDropDown(options: List<String>,onSelectionChange:(String)->Unit) {
 }
 
 @Composable
-fun CustomOutLineTextField(labelText:String,icon:ImageVector,keyboardType: KeyboardType,onValueChange:(String)->Unit) {
+fun CustomOutLineTextField(labelText:String,value:String,icon:ImageVector,keyboardType: KeyboardType,
+                           onValueChange:(String)->Unit) {
 
-    var value by remember {
-        mutableStateOf("")
-    }
 
       TextField(
           modifier = Modifier
@@ -358,7 +468,7 @@ fun CustomOutLineTextField(labelText:String,icon:ImageVector,keyboardType: Keybo
             value = value,
             onValueChange = {
                 onValueChange.invoke(it)
-                value = it
+
             },
             leadingIcon ={Icon(imageVector =icon, contentDescription = null, tint = Primary)}  ,
             label = { Text(text = labelText)},
