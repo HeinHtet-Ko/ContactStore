@@ -10,7 +10,7 @@ data class ContactDetail(
     val lastName:String?=null,
     val imgData:ByteArray? = null,
     val isStarred:Boolean = false,
-    val phones:List<LabeledPhone>,
+    var phones:List<LabeledPhone>,
     val mails:List<LabeledMail>? = null,
     val note:String? = null,
     val webAddress:String? = null

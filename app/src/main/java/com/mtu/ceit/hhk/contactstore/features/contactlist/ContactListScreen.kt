@@ -4,6 +4,8 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -32,6 +35,9 @@ import com.mtu.ceit.hhk.contactstore.R
 import com.mtu.ceit.hhk.contactstore.Screen
 import com.mtu.ceit.hhk.contactstore.ui.theme.GreenVariant
 import com.mtu.ceit.hhk.contactstore.ui.theme.RedVariant
+import kotlinx.coroutines.delay
+import java.lang.Integer.min
+import kotlin.math.max
 
 
 @SuppressLint("MutableCollectionMutableState")
@@ -43,33 +49,35 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
 
 
 
-    val list = contactVM.contactList.value
+//    val list = contactVM.contactList.value
+//
+//
+//    var selectedList by remember {
+//        mutableStateOf(mutableListOf<Contact>())
+//    }
+//    var isSelecting by remember {
+//        mutableStateOf(false)
+//    }
+//
+//    val openSelect = remember {
+//        {
+//            isSelecting = true
+//        }
+//
+//    }
+//
+//
+//
+//    val closeSelect = remember {
+//
+//       {
+//            isSelecting = false
+//            selectedList.clear()
+//        }
+//
+//    }
 
-
-    var selectedList by remember {
-        mutableStateOf(mutableListOf<Contact>())
-    }
-    var isSelecting by remember {
-        mutableStateOf(false)
-    }
-
-    val openSelect = remember {
-        {
-            isSelecting = true
-        }
-
-    }
-
-    val closeSelect = remember {
-
-       {
-            isSelecting = false
-            selectedList.clear()
-        }
-
-    }
-
-     val clickItem:(Contact)->Unit = remember {
+     val navigateToDetail:(Contact)->Unit = remember {
          {
              contact: Contact ->
              navController.navigate(Screen.ContactDetailScreen.createRoute(contact.contactId))
@@ -78,86 +86,108 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
 
 
 
-   val addAll = remember {
-       {
-           val tempList = mutableListOf<Contact>()
-           if(selectedList.size == list.size) {
-               tempList.clear()
-           }else{
-               tempList.addAll(list)
-           }
-           selectedList = tempList
-       }
-   }
+//   val addAll = remember {
+//       {
+//           val tempList = mutableListOf<Contact>()
+//           if(selectedList.size == list.size) {
+//               tempList.clear()
+//           }else{
+//               tempList.addAll(list)
+//           }
+//           selectedList = tempList
+//       }
+//   }
 
-   val toggleList = { contact: Contact ->
-
-        val tempList = mutableListOf<Contact>()
-        tempList.addAll(selectedList)
-
-        if(!tempList.contains(contact)){
-            tempList.add(contact)
-        }
-
-        else{
-            tempList.remove(contact)
-    }
-
-        selectedList = tempList
-
-
-    }
+//   val toggleList = { contact: Contact ->
+//
+//        val tempList = mutableListOf<Contact>()
+//        tempList.addAll(selectedList)
+//
+//        if(!tempList.contains(contact)){
+//            tempList.add(contact)
+//        }
+//
+//        else{
+//            tempList.remove(contact)
+//    }
+//
+//        selectedList = tempList
+//
+//
+//    }
 
 
 
     val listState = rememberLazyListState()
 
 
-    var isShowing by remember {
-        mutableStateOf(true)
-    }
+//    var isShowing by remember {
+//        mutableStateOf(true)
+//    }
 
 
 
-    var query by remember {
-        mutableStateOf("")
-    }
+
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-//        TextField(value = query, onValueChange = {
-//            query = it
-//            contactVM.onQuChange(it)
-//        } )
+
+        if(listState.firstVisibleItemIndex == 1 || listState.firstVisibleItemIndex == 0)
+        {
+            contactVM.listStateValue = min(80,270-listState.firstVisibleItemScrollOffset)
+
+        }else if(contactVM.firstVisibleIndex > listState.firstVisibleItemIndex)
+        {
+            contactVM.listStateValue = 80
+        }
+        else
+        {
+            contactVM.listStateValue = 0
+        }
+
+        if (!listState.isScrollInProgress){
+            contactVM.firstVisibleIndex = listState.firstVisibleItemIndex
+        }
+
+        AnimatedVisibility(visible = contactVM.isSelecting.value) {
+            SelectContactHeader(contactVM.selectedList.value,contactVM::onSelectToggle,contactVM::onSelectAllToggle,contactVM.isSelecting.value)
+
+        }
+
+        AnimatedVisibility(visible = !contactVM.isSelecting.value) {
+            ContactHeader(title = "Contact List",firstIt = contactVM.listStateValue,
+                isSelecting = contactVM.isSelecting.value, toggleSe = contactVM::onSelectToggle, list = contactVM.selectedList.value
+            )
+
+        }
 
 
-        AnimatedVisibility(visible = isSelecting) {
-            SelectContactHeader(selectedList,closeSelect,addAll,isSelecting)
-        }
-        AnimatedVisibility(visible = !isSelecting) {
-            ContactHeader(title = "Contact List",isSelecting,openSelect,selectedList)
-        }
 
         Box {
 
-            LazyColumn(modifier = if(isSelecting)Modifier.padding(0.dp,0.dp,0.dp,80.dp)else Modifier){
+            LazyColumn(state = listState,modifier = if (contactVM.isSelecting.value) Modifier.padding(0.dp,0.dp,0.dp,80.dp) else Modifier){
 
 
-                if(query.isBlank())
+                if("".isBlank())
                 {
-                    items(items =  list,
+                    items(items =  contactVM.contactList.value,
                         key = {
                             it.contactId
                         }){ contact: Contact ->
-                        ContactListItem(contact,isSelecting,selectedList,toggleList){
-                            clickItem.invoke(contact)
+                        ContactListItem(
+                            contact,
+                            contactVM.isSelecting.value,
+                            contactVM.selectedList.value){
+                            if (contactVM.isSelecting.value) contactVM.onItemSelectToggle(it)
+                            else navigateToDetail(it)
                         }
                     }
                 }else{
                     items(items = contactVM.searchResults.value,
                         ){ contact: Contact ->
-                        ContactListItem(contact,isSelecting,selectedList,toggleList){
-                            clickItem.invoke(contact)
+                        ContactListItem(contact,contactVM.isSelecting.value,contactVM.selectedList.value){
+                            if (contactVM.isSelecting.value) contactVM.onItemSelectToggle(it)
+                            else navigateToDetail(it)
                         }
                     }
                 }
@@ -168,12 +198,10 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
 
                     Column {
-                        AnimatedVisibility(visible = isSelecting) {
-                            BottomActionBar(onDeleteItems = {
-                                Log.d("selectedtrack", "ContactList: ${selectedList[0].contactId}")
-                                contactVM.deleteContacts(selectedList.map { it.contactId })
-                                closeSelect()
-                            }, onUploadItems = {
+                        AnimatedVisibility(visible = contactVM.isSelecting.value) {
+                            BottomActionBar(
+                                onDeleteItems = contactVM::onDeleteItems,
+                                onUploadItems = {
 
                             })
                         }
@@ -188,7 +216,7 @@ fun ContactList(contactVM: LocalContactListViewModel = hiltViewModel(),navContro
                 .padding(25.dp)) {
 
                 Column {
-                    AnimatedVisibility(visible = isShowing && !isSelecting,
+                    AnimatedVisibility(visible = true,
                         enter = fadeIn() + slideIn(
                             initialOffset = { IntOffset(it.height,1200) },
                             animationSpec = (tween(500))
@@ -300,7 +328,7 @@ fun SelectContactHeader(selectedList:List<Contact>, closeSelect:()->Unit, addAll
 
     
 @Composable
-fun ContactHeader(title:String,isSelecting:Boolean,toggleSe:()->Unit,list:List<Contact>) {
+fun ContactHeader(firstIt:Int,title:String,isSelecting:Boolean,toggleSe:()->Unit,list:List<Contact>) {
 
     var count = list.size
    // Log.d("contactheader", "ContactHeader: ${count.size}")
@@ -308,38 +336,53 @@ fun ContactHeader(title:String,isSelecting:Boolean,toggleSe:()->Unit,list:List<C
     var text =
         if(isSelecting) " ${count} items " else " Contact List "
 
-    Row(
-
-        Modifier
-            .fillMaxWidth()
-            .alpha(if (isSelecting) 0f else 1f)
-            .background(MaterialTheme.colors.surface)
-            .height(100.dp)
-        ,verticalAlignment = Alignment.CenterVertically
-        , horizontalArrangement = Arrangement.SpaceAround) {
-
-        Text(text = text, fontSize = 25.sp,
-            color = MaterialTheme.colors.primaryVariant
-            ,
-            fontFamily = FontFamily(Font(R.font.sourceserif)),
-            )
-        IconButton(onClick = {
-            toggleSe.invoke()
-        }) {
-            Icon(painter = painterResource(id = R.drawable.ic_select)
-                , contentDescription = null
-                ,modifier = Modifier.size(33.dp))
-        }
+    var thd by remember {
+        mutableStateOf(0)
     }
 
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .background(MaterialTheme.colors.surface)
+        .graphicsLayer {
+//            if (firstIt == 1)
+//                scaleY = listStateY
+
+        }) {
+
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .alpha(if (isSelecting) 0f else 1f)
+            .height(100.dp)
+            ,verticalAlignment = Alignment.CenterVertically
+            , horizontalArrangement = Arrangement.SpaceAround) {
+
+            Text(text = text, fontSize = 25.sp,
+                color = MaterialTheme.colors.primaryVariant
+                ,
+                fontFamily = FontFamily(Font(R.font.sourceserif)),
+            )
+            IconButton(onClick = {
+                toggleSe.invoke()
+            }) {
+                Icon(painter = painterResource(id = R.drawable.ic_select)
+                    , contentDescription = null
+                    ,modifier = Modifier.size(33.dp))
+            }
+        }
+        val anh by animateIntAsState(targetValue = firstIt, tween(1000))
+        ContactSearchField(anh,query = "", labelStr = "label", onQueryChange = {})
+      //  val hd by animateIntAsState(targetValue = thd, animationSpec = tween(2000))
+       // thd = if (ispro) 0 else 100
+       // AnimatedVisibility(visible = !ispro) {
+           // ContactSearchField(hd,query = " ", labelStr = "Search For Contact", onQueryChange = {})
+      //  }
+
+
+    }
+
+
+
+
+
 }
 
-
-@ExperimentalPermissionsApi
-@ExperimentalMaterialApi
-@RequiresApi(Build.VERSION_CODES.N)
-@Composable
-@Preview(showBackground = true)
-fun prev() {
-
-}

@@ -32,6 +32,12 @@ class LocalContactListViewModel @Inject constructor (
     var searchResults:MutableState<List<Contact>> = mutableStateOf(mutableListOf())
     val contactList = _contactList
 
+    var listStateValue = 0
+    var firstVisibleIndex = 0
+
+    var isSelecting = mutableStateOf(false)
+    var selectedList:MutableState<List<Contact>> = mutableStateOf(mutableListOf())
+
 
 
     init {
@@ -39,23 +45,50 @@ class LocalContactListViewModel @Inject constructor (
 
     }
 
-
-
-    fun deleteContacts(contactIdList:List<Long>) {
+    private fun deleteContacts(contactIdList:List<Long>) {
 
         viewModelScope.launch {
             deleteContact.invoke(contactIdList) }
 
     }
 
-     private fun getContacts(){
-
-        viewModelScope.launch() {
-
+    private fun getContacts(){
+         viewModelScope.launch(IO) {
             getAllContacts.invoke(Unit).collect {
                 _contactList.value = it
             }
         }
+    }
+
+    fun onSelectToggle() {
+        isSelecting.value = !isSelecting.value
+    }
+
+    fun onDeleteItems() {
+        deleteContacts(selectedList.value.map { it.contactId })
+        onSelectToggle()
+    }
+
+    fun onItemSelectToggle(contact:Contact) {
+        val tempList:MutableList<Contact> = mutableListOf()
+        tempList.addAll(selectedList.value)
+        if(tempList.contains(contact)){
+            tempList.remove(contact)
+        }else{
+            tempList.add(contact)
+        }
+        selectedList.value  = tempList
+    }
+
+    fun onSelectAllToggle() {
+        val tempList:MutableList<Contact> = mutableListOf()
+        tempList.addAll(selectedList.value)
+        if (selectedList.value.size == contactList.value.size){
+            tempList.clear()
+        }else{
+            tempList.addAll(contactList.value)
+        }
+        selectedList.value = tempList
     }
 
 

@@ -25,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexstyl.contactstore.Label
 import com.mtu.ceit.hhk.contactstore.R
+import com.mtu.ceit.hhk.contactstore.Screen
 import com.mtu.ceit.hhk.contactstore.domain.models.ContactDetail
 import com.mtu.ceit.hhk.contactstore.domain.models.LabeledMail
 import com.mtu.ceit.hhk.contactstore.domain.models.LabeledPhone
@@ -39,8 +40,18 @@ fun ContactAdd(navController: NavController,
                contactAddVM: AddContactViewModel = hiltViewModel()) {
 
 
-    if (contactID != 0L)
-       contactAddVM.getContactUpdate(contactID)
+    val contactUpdate by remember {
+        if (contactID != 0L){
+            contactAddVM.getContactUpdate(contactID)
+            contactAddVM.update_contact
+        }else{
+            contactAddVM.update_contact
+        }
+    }
+
+
+
+
 
     val scrollState = rememberScrollState()
 
@@ -84,35 +95,35 @@ fun ContactAdd(navController: NavController,
 
 
 
+
                 repeat(contactAddVM.phoneCount.value) { index:Int ->
                     var phoneValue by remember {
-                        mutableStateOf("")
-                    }
-                    if(contactID != 0L && contactAddVM.updateContact.value != null ){
-                        if(!contactAddVM.updateContact.value!!.phones.isNullOrEmpty()) {
-                            phoneValue = contactAddVM.updateContact.value!!.phones!![index].phoneValue
-                            contactAddVM.phoneCount.value = contactAddVM.updateContact.value!!.phones!!.size
+                        if(contactID != 0L ) {
+                            val value = contactAddVM.phoneList[index].phoneValue
+                            mutableStateOf(value)
+                        }else {
+                            mutableStateOf("")
                         }
                     }
+
                     CombinedPhoneField (
                         phoneValue = phoneValue
                         ,options = labels.toList(),
                         onFieldChange = { phone,label ->
                             phoneValue = phone
                             contactAddVM.addPhoneList(index,LabeledPhone(phone,label.toLabel()))
+
                         })
                     }
 
                 repeat(contactAddVM.mailCount.value) { index:Int ->
                     var mailValue by remember {
-                        mutableStateOf("")
-                    }
+                        if(contactID != 0L){
+                            val value = contactAddVM.mailList[index].mailValue
+                            mutableStateOf(value)
+                        } else
+                            mutableStateOf("")
 
-                    if(contactID != 0L && contactAddVM.updateContact.value != null ){
-                        if(!contactAddVM.updateContact.value!!.mails.isNullOrEmpty()) {
-                            mailValue = contactAddVM.updateContact.value!!.mails!![index].mailValue
-                            contactAddVM.mailCount.value = contactAddVM.updateContact.value!!.mails!!.size
-                        }
                     }
 
                     CombinedMailField(options = maillabels.toList(),
@@ -122,35 +133,6 @@ fun ContactAdd(navController: NavController,
                     }
                 }
 
-//                  repeat(contactAddVM.testCount.value) { index ->
-//                      var con by remember {
-//                          mutableStateOf("")
-//                      }
-//                      if (contactID == 0L){
-//                          if(index != contactAddVM.testList.size)
-//                          con = contactAddVM.testList[index]
-//                          contactAddVM.testCount.value = contactAddVM.testList.size + 1
-//                      }
-//
-//                      CombinedTestField(
-//                          testValue = con,
-//                          onValueChange = {
-//                              con = it
-//                              if(contactAddVM.testList.size == index){
-//                                  contactAddVM.testList.add(index,it)
-//                              }else{
-//                                  contactAddVM.testList[index] = it
-//                              }
-//
-//                              if(index+1 == contactAddVM.testCount.value)
-//                                  contactAddVM.testCount.value = index +2
-//                          },
-//                          options = maillabels.toList(),
-//                          onSelectionChange = {
-//
-//                          }
-//                      )
-//                  }
 
                 var expand by remember {
                     mutableStateOf(false)
@@ -212,8 +194,17 @@ fun ContactAdd(navController: NavController,
             }
 
             IconButton(onClick = {
-                         contactAddVM.addContact()
-                         navController.popBackStack()
+                        if(contactID == 0L){
+                            contactAddVM.addContact()
+
+                        }else{
+                            contactAddVM.updateContact(contactID)
+                        //    navController.navigate(Screen.ContactDetailScreen.createRoute(contactID))
+                        }
+                navController.popBackStack()
+
+
+
             }, modifier = Modifier.padding(0.dp,0.dp,15.dp,0.dp)) {
                 Icon(imageVector = Icons.Default.Check,
                     contentDescription = null ,
@@ -225,53 +216,6 @@ fun ContactAdd(navController: NavController,
         }
 
     }
-
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun CombinedTestField(
-    testValue:String,
-    onValueChange: (String) -> Unit,
-    options: List<String>,
-    onSelectionChange: (String) -> Unit
-){
-
-
-    Column() {
-        CustomOutLineField(
-            value = testValue,
-            labelText = "Test",
-            icon = Icons.Default.CheckCircle,
-            keyboardType = KeyboardType.Text,
-            onValueChange = onValueChange)
-        ExposedDropDown(
-            options = options,
-            onSelectionChange = onSelectionChange)
-    }
-
-}
-
-@Composable
-fun CustomOutLineField(value:String,labelText:String,
-                       icon:ImageVector,keyboardType: KeyboardType,
-                           onValueChange:(String)->Unit) {
-
-
-    TextField(
-        modifier = Modifier
-            .padding(PaddingValues(30.dp, 15.dp, 40.dp, 0.dp))
-            .background(MaterialTheme.colors.onSecondary)
-            .fillMaxWidth(),
-        value = value,
-        onValueChange = {
-            onValueChange.invoke(it)
-                        },
-        leadingIcon ={Icon(imageVector =icon, contentDescription = null, tint = Primary)}  ,
-        label = { Text(text = labelText)},
-        keyboardOptions = KeyboardOptions(keyboardType =keyboardType)
-    )
-
 
 }
 

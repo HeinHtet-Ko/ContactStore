@@ -1,6 +1,7 @@
 package com.mtu.ceit.hhk.contactstore.data
 
 import android.util.Log
+import androidx.compose.ui.text.toUpperCase
 import com.alexstyl.contactstore.*
 
 import com.mtu.ceit.hhk.contactstore.domain.ContactRepository
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.*
 import javax.inject.Inject
 
 class ContactReposImpl @Inject constructor(val contactStore: ContactStore):ContactRepository {
@@ -57,19 +59,11 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
                     phone( it.value,it.label )
                 }
                 contactDetail.mails?.forEach {
-                    Log.d("mailtrackerlabel", "insertContact: ${it.label}")
                     mail(it.value,it.label)
                 }
-
-
-               // webAddress("ahsd",Label.Other)
-
-
                 note = contactDetail.note
 
-                contactDetail.webAddress?.let { webAddress(it,Label.LocationHome) }
-
-              //  imageData = ImageData(byteArrayOf("sjsjd".toByte()))
+                contactDetail.webAddress?.let { webAddress(it,Label.WebsiteHomePage) }
 
             }
         }
@@ -82,7 +76,6 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
 
 
             contactIdList.forEach {
-                Log.d("idtracker", "deleteContact: $it for each")
                 withContext(IO){
                     contactStore.execute {
                         delete(it)
@@ -103,7 +96,8 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
                ContactColumn.Mails,
                ContactColumn.Image,
                ContactColumn.WebAddresses,
-               ContactColumn.Note
+               ContactColumn.Note,
+               ContactColumn.Names
 
            )
         ).first().first()
@@ -135,6 +129,8 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
         return ContactDetail(
             id = contact.contactId,
             displayName = contact.displayName,
+            firstName = contact.firstName + " ${contact.middleName}",
+            lastName = contact.lastName,
             imgData = contact.imageData?.raw,
             isStarred = contact.isStarred,
             phones = phones,
@@ -162,6 +158,57 @@ class ContactReposImpl @Inject constructor(val contactStore: ContactStore):Conta
             })
         }
 
+
+    }
+
+    override suspend fun updateContact(contactDetail: ContactDetail) {
+
+       val contact = contactStore.fetchContacts(
+            predicate = ContactPredicate.ContactLookup( inContactIds = listOf(contactDetail.id!!) ),
+                    columnsToFetch = listOf(
+                        ContactColumn.Phones,
+                        ContactColumn.Mails,
+                        ContactColumn.Image,
+                        ContactColumn.WebAddresses,
+                        ContactColumn.Note,
+                        ContactColumn.Names)).first().first()
+
+
+      val updatedFirstName = contactDetail.firstName
+      val updatedLastName = contactDetail.lastName
+      val updatedPhones =  contactDetail.phones.map {
+            LabeledValue(PhoneNumber(raw = it.phoneValue), label = it.label)
+        }
+
+      val updatedMails = contactDetail.mails?.map {
+          LabeledValue(MailAddress(raw = it.mailValue), label = it.label)
+      }
+      val updatedWebAddress  = contactDetail.webAddress
+      val updatedNote = contactDetail.note
+        contactStore.execute {
+            update(
+                contact.mutableCopy().apply {
+                    firstName = updatedFirstName
+                    lastName = updatedLastName
+                    phones.clear()
+                    phones.addAll(updatedPhones)
+                    updatedMails?.let {
+                        mails.clear()
+                        mails.addAll(updatedMails)
+                    }
+                   note = if (updatedNote == null){ null }else { Note(updatedNote) }
+                    // ?: Note(updatedNote)
+                    updatedWebAddress?.let {
+                        webAddresses.clear()
+                        webAddresses.addAll(listOf(LabeledValue(WebAddress(raw = updatedWebAddress),Label.WebsiteHomePage)))
+                    }
+
+
+
+
+                }
+            )
+        }
 
     }
 
