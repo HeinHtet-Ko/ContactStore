@@ -18,4 +18,6 @@ interface ContactRepository {
     suspend fun getContactDetail(contact_id:Long):ContactDetail
 
     suspend fun toggleFavourite(contact_id:Long)
+
+    suspend fun updateContact(contact:ContactDetail)
 }

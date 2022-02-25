@@ -10,6 +10,7 @@ import com.alexstyl.contactstore.LabeledValue
 import com.mtu.ceit.hhk.contactstore.R
 import com.mtu.ceit.hhk.contactstore.domain.GetContactDetail
 import com.mtu.ceit.hhk.contactstore.domain.PutContact
+import com.mtu.ceit.hhk.contactstore.domain.UpdateContact
 import com.mtu.ceit.hhk.contactstore.domain.models.ContactDetail
 import com.mtu.ceit.hhk.contactstore.domain.models.LabeledMail
 import com.mtu.ceit.hhk.contactstore.domain.models.LabeledPhone
@@ -21,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AddContactViewModel @Inject constructor(
     private val putContact: PutContact,
-    private val getContactDetail: GetContactDetail
+    private val getContactDetail: GetContactDetail,
+   private val updateContact: UpdateContact
 ):ViewModel() {
 
 
@@ -32,21 +34,16 @@ class AddContactViewModel @Inject constructor(
      var phoneList = mutableListOf<LabeledPhone>()
     val phoneCount = mutableStateOf(1)
 
-     val mailList = mutableListOf<LabeledMail>()
+     var mailList = mutableListOf<LabeledMail>()
     val mailCount = mutableStateOf(1)
 
 //    val mailValue= mutableStateOf("")
 //    val phoneValue = mutableStateOf("")
 
-     val webAddress = mutableStateOf("")
+    val webAddress = mutableStateOf("")
     val note = mutableStateOf("")
 
-    val testList = mutableListOf<String>("haha","it should")
-    val testUpdateList = mutableListOf<String>("fuck you","declarative","shame on you jc")
-    val testString = mutableStateOf("")
-    val testCount = mutableStateOf(1)
-
-    val updateContact = mutableStateOf<ContactDetail?>(null)
+    var update_contact = mutableStateOf<ContactDetail?>(null)
 
     fun onFirstNameChange(fName:String){
         firstName.value = fName
@@ -68,14 +65,22 @@ class AddContactViewModel @Inject constructor(
 
         viewModelScope.launch {
             val contact = getContactDetail.invoke(id)
-            updateContact.value = contact
+            update_contact.value = contact
             firstName.value = contact.firstName.toString()
             lastName.value = contact.lastName.toString()
             note.value = contact.note ?: ""
             webAddress.value = contact.webAddress ?: ""
+
             phoneList = contact.phones.toMutableList()
+            phoneList.add(LabeledPhone("",Label.PhoneNumberMobile))
+            phoneCount.value = phoneList.size
+
+            mailList = contact.mails?.toMutableList() ?: mutableListOf()
+            mailList.add(LabeledMail("",Label.LocationWork))
+            mailCount.value = mailList.size
 
         }
+
 
     }
 
@@ -88,8 +93,13 @@ class AddContactViewModel @Inject constructor(
         }
 
         if(index+1 == phoneCount.value)
+        {
             phoneCount.value = index +2
-         }
+            if(update_contact.value != null){
+                phoneList.add(LabeledPhone("",Label.PhoneNumberMobile))
+            }
+        }
+    }
 
 
     fun addMailList(index:Int,labeledMail: LabeledMail) {
@@ -101,12 +111,19 @@ class AddContactViewModel @Inject constructor(
         }
 
         if(index+1 == mailCount.value)
-        mailCount.value = index +2
+        {
+            mailCount.value = index +2
+            if(update_contact.value != null){
+                mailList.add(LabeledMail("",Label.LocationWork))
+            }
+        }
+
 
     }
 
     fun addContact() {
         viewModelScope.launch {
+
             putContact.invoke(ContactDetail(
                 firstName = firstName.value,
                 lastName = lastName.value,
@@ -116,6 +133,25 @@ class AddContactViewModel @Inject constructor(
                 note = note.value
             ))
         }
+    }
+
+    fun updateContact(contactID:Long) {
+        viewModelScope.launch {
+            phoneList.removeLast()
+            mailList.removeLast()
+            updateContact.invoke(
+                ContactDetail(
+                    id = contactID,
+                    firstName = firstName.value,
+                    lastName = lastName.value,
+                    phones = phoneList,
+                    mails = mailList,
+                    webAddress = webAddress.value,
+                    note = note.value
+                )
+            )
+        }
+
     }
 
 }

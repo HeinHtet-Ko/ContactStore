@@ -34,9 +34,10 @@ import kotlin.math.roundToInt
 
 @ExperimentalMaterialApi
 @Composable
-fun ContactListItem(item: Contact, isSelecting:Boolean,
-                    contactList:MutableList<Contact>,
-                    toggle:(Contact)->Unit, clickListen:()->Unit) {
+fun ContactListItem(item: Contact,
+                    isSelecting:Boolean,
+                    contactList:List<Contact>,
+                    onItemClick:(Contact)->Unit) {
 
     val swSt = rememberSwipeableState(initialValue = 0)
     val isSelected = contactList.contains(item)
@@ -60,14 +61,7 @@ fun ContactListItem(item: Contact, isSelecting:Boolean,
             }, anchors = mapOf(0f to 0, siz to 1, -siz to 2)
         )
         .clickable {
-            if (isSelecting) {
-                toggle.invoke(item)
-                // color = if (color == Color.Transparent) Color.Green else Color.Transparent
-
-            } else {
-                clickListen.invoke()
-                // color = Color.Transparent
-            }
+            onItemClick.invoke(item)
         }
         .height(100.dp)
         .padding(20.dp, 5.dp)
@@ -102,9 +96,12 @@ fun ContactListItem(item: Contact, isSelecting:Boolean,
                 .background(surfaceColor)
         , verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround) {
-            Text(text = item.displayName ?: " ", fontSize = 18.sp
-                , fontFamily = FontFamily(Font(R.font.mukutamedium)),
-            modifier = Modifier.width(195.dp))
+            Text(
+                text = item.displayName ?: " ",
+                fontSize = 18.sp,
+                maxLines = 1
+                ,fontFamily = FontFamily(Font(R.font.mukutamedium)),
+                modifier = Modifier.width(200.dp))
 
             Icon(painter = painterResource(id = R.drawable.ic_check),
                 contentDescription = null,
@@ -115,12 +112,5 @@ fun ContactListItem(item: Contact, isSelecting:Boolean,
 
     }
 
-}
-
-@ExperimentalMaterialApi
-@Preview(showBackground = true)
-@Composable
-fun Prev() {
-   // ContactListItem(item = ContactItem("George","097770109404"), isSelecting = false, selectedList = mutableListOf() )
 }
 

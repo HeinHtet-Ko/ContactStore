@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
                         // A surface container using the 'background' color from the theme
                         Surface(color = MaterialTheme.colors.background) {
 
-                            Text(text = " Grant the Permissions!You fuckers ", fontSize = 30.sp, color = Color.Red)
+                            Text(text = " Grant the Permissions! You people ", fontSize = 30.sp, color = Color.Red)
 
                         }
                     }

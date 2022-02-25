@@ -49,19 +49,21 @@ fun ContactDetail(navController: NavController,
                   contactVM:ContactDetailViewModel = hiltViewModel()) {
 
 
-
-    val contactDetail = remember {
+    LaunchedEffect(Unit){
         contactVM.fetchContactDetail(contactID)
-        contactVM.contactDetail.value!!
     }
+    //val contactDetail by remember {
+     //   mutableStateOf(contactVM.contactDetail.value)
+      //  contactVM.contactDetail.value
+   // }
 
-    val colorbyStarred = remember {
-        mutableStateOf(if(contactDetail.isStarred) Color.Yellow  else Color.Unspecified)
-    }
+//    val colorbyStarred = remember {
+//        mutableStateOf(if(contactDetail.isStarred) Color.Yellow  else Color.Unspecified)
+//    }
 
-    LaunchedEffect(key1 = contactVM.contactDetail.value) {
-        colorbyStarred.value =  if(contactVM.contactDetail.value!!.isStarred) Color.Yellow  else Color.Unspecified
-    }
+//    LaunchedEffect(key1 = contactVM.contactDetail.value) {
+//        colorbyStarred.value =  if(contactVM.contactDetail.value!!.isStarred) Color.Yellow  else Color.Unspecified
+//    }
 
 
     val onArrowPressed = remember {
@@ -73,10 +75,7 @@ fun ContactDetail(navController: NavController,
 
     val onEditClick = remember {
         {
-            contactDetail.id?.let {
-                navController.navigate(Screen.ContactAddScreen.createRoute(it))
-            }
-            Unit
+            navController.navigate(Screen.ContactAddScreen.createRoute(contactID))
         }
     }
 
@@ -85,7 +84,7 @@ fun ContactDetail(navController: NavController,
 
 
     Box {
-        ContactImage(imgByteArray = contactVM.contactDetail.value!!.imgData,alpha = alp )
+        ContactImage(imgByteArray = contactVM.contactDetail.value?.imgData,alpha = alp )
 
         Box(modifier = Modifier
             .fillMaxSize()
@@ -107,7 +106,7 @@ fun ContactDetail(navController: NavController,
                         }
                         .fillMaxWidth()
                         .padding(30.dp, 5.dp, 5.dp, 20.dp),
-                    text = contactDetail.displayName ?: " ",
+                    text = contactVM.contactDetail.value?.displayName ?:"",
                     color = WhiteVariant,
                     textAlign = TextAlign.Start,
                     fontSize = 20.sp,
@@ -115,22 +114,22 @@ fun ContactDetail(navController: NavController,
                 )
 
 
-               if(!contactDetail.phones.isNullOrEmpty()) {
-                   ValueCard(iconID = R.drawable.ic_call, iconTint = GreenVariant,contactDetail.phones)
+               if(!contactVM.contactDetail.value?.phones.isNullOrEmpty()) {
+                   ValueCard(iconID = R.drawable.ic_call, iconTint = GreenVariant,contactVM.contactDetail.value?.phones?: emptyList())
                }
 
 
-                if (!contactDetail.mails.isNullOrEmpty())
+                if (!contactVM.contactDetail.value?.mails.isNullOrEmpty())
                 {
-                    ValueCard(iconID = R.drawable.ic_mail, iconTint = RedVariant, valueList = contactDetail.mails)
+                    ValueCard(iconID = R.drawable.ic_mail, iconTint = RedVariant, valueList = contactVM.contactDetail.value?.mails!!)
                 }
 
-                if(!contactDetail.note.isNullOrBlank() or !contactDetail.webAddress.isNullOrBlank())
+                if(!contactVM.contactDetail.value?.note.isNullOrBlank() or !contactVM.contactDetail.value?.webAddress.isNullOrBlank())
                 {
                     MoreInfoCard(
-                        displayName = contactDetail.displayName ?: "",
-                        webAddress = contactDetail.webAddress,
-                        note = contactDetail.note)
+                        displayName = contactVM.contactDetail.value?.displayName ?: "",
+                        webAddress = contactVM.contactDetail.value?.webAddress,
+                        note = contactVM.contactDetail.value?.note)
 
                 }
 
@@ -140,9 +139,9 @@ fun ContactDetail(navController: NavController,
         }
 
 
-       TopActionBar(onArrowPressed,contactDetail.displayName ?: "" , alp, onStarClick = {
+       TopActionBar(onArrowPressed,contactVM.contactDetail.value?.displayName ?: "" , alp, onStarClick = {
             contactVM.toggleFav(contactID)
-        }, onEditClick = onEditClick , starColor = colorbyStarred.value)
+        }, onEditClick = onEditClick , starColor = if(contactVM.contactDetail.value?.isStarred == true) Color.Yellow else Color.Unspecified)
 
 
     }
@@ -241,7 +240,7 @@ fun MoreInfoCard(displayName:String,webAddress:String?,note:String?) {
     Card( modifier = Modifier
         .fillMaxWidth()
         .wrapContentHeight()
-        .padding(25.dp, 5.dp),
+        .padding(10.dp, 5.dp),
         elevation = 10.dp,
         shape = RoundedCornerShape(3.dp)) {
 
@@ -370,7 +369,7 @@ fun ValueCard( iconID:Int,iconTint:Color,valueList:List<LabeledValue<String>>) {
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .padding(25.dp, 5.dp),
+            .padding(10.dp, 5.dp),
         elevation = 10.dp,
         shape = RoundedCornerShape(3.dp)) {
 
@@ -410,9 +409,9 @@ fun ValueField(list:List<LabeledValue<String>>) {
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(4.dp))
                 .clickable {
-                       val i = Intent(Intent.ACTION_CALL)
-                        i.data = Uri.parse("tel:${it.value.trim()}")
-                        context.startActivity(i)
+                    val i = Intent(Intent.ACTION_CALL)
+                    i.data = Uri.parse("tel:${it.value.trim()}")
+                    context.startActivity(i)
                 }
                 .padding(7.dp)) {
                 Text(text = it.value, style = MaterialTheme.typography.h6, modifier = Modifier)
